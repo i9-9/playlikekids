@@ -4,6 +4,10 @@ export default function Home() {
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-6">
       <div className="relative flex flex-col items-center gap-0 animate-[fadeIn_1.2s_ease-out]">
+        <p className="relative -mb-2 text-center text-[clamp(0.85rem,2.2vw,1.1rem)] uppercase tracking-[0.22em] text-foreground/55">
+          Under Construction
+        </p>
+
         <Image
           src="/ASSETS/LOGO_PNG/1_Logotipo_PLK_color-negro.png"
           alt="Play Like Kids"
