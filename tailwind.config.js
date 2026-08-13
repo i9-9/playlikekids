@@ -13,6 +13,7 @@ module.exports = {
       },
       fontFamily: {
         druk: ["var(--font-druk-heavy)", "sans-serif"],
+        roboto: ["var(--font-roboto)", "sans-serif"],
       },
     },
   },

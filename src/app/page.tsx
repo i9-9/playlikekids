@@ -22,7 +22,7 @@ export default function Home() {
           className="h-auto w-full"
         />
 
-        <div className="flex w-full flex-col items-start gap-2 text-left">
+        <div className="flex w-full flex-col items-start gap-2 text-left font-roboto">
           <a
             href="mailto:hello@playlikekids.tv"
             className="text-[clamp(1rem,2.4vw,1.2rem)] uppercase tracking-[0.16em] text-foreground transition-opacity hover:opacity-60"
