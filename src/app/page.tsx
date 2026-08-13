@@ -29,7 +29,7 @@ export default function Home() {
         >
           <a
             href="mailto:hello@playlikekids.tv"
-            className="text-[clamp(1rem,2.4vw,1.2rem)] uppercase tracking-[0.08em] text-foreground transition-opacity hover:opacity-60"
+            className="text-[clamp(1rem,2.4vw,1.2rem)] tracking-[0.08em] text-foreground transition-opacity hover:opacity-60"
             style={{ fontWeight: 700 }}
           >
             hello@playlikekids.tv
