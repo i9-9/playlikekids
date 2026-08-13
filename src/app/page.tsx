@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { roboto } from "./fonts";
 
 export default function Home() {
   return (
@@ -22,14 +23,21 @@ export default function Home() {
           className="h-auto w-full"
         />
 
-        <div className="flex w-full flex-col items-start gap-2 text-left font-roboto">
+        <div
+          className={`${roboto.className} flex w-full flex-col items-start gap-2 text-left`}
+          style={{ fontWeight: 700 }}
+        >
           <a
             href="mailto:hello@playlikekids.tv"
-            className="text-[clamp(1rem,2.4vw,1.2rem)] uppercase tracking-[0.16em] text-foreground transition-opacity hover:opacity-60"
+            className="text-[clamp(1rem,2.4vw,1.2rem)] uppercase tracking-[0.08em] text-foreground transition-opacity hover:opacity-60"
+            style={{ fontWeight: 700 }}
           >
             hello@playlikekids.tv
           </a>
-          <p className="text-[clamp(0.7rem,1.8vw,0.8rem)] uppercase tracking-[0.22em] text-foreground/45">
+          <p
+            className="text-[clamp(0.7rem,1.8vw,0.8rem)] uppercase tracking-[0.12em] text-foreground"
+            style={{ fontWeight: 700 }}
+          >
             CDMX 2026
           </p>
         </div>

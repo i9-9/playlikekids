@@ -1,20 +1,6 @@
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
-import localFont from "next/font/local";
+import { drukHeavy, roboto } from "./fonts";
 import "./globals.css";
-
-const drukHeavy = localFont({
-  src: "../../public/ASSETS/TIPOGRAFIA/Druk-Heavy-Trial.otf",
-  variable: "--font-druk-heavy",
-  display: "swap",
-});
-
-const roboto = Roboto({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-roboto",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Play Like Kids",
@@ -27,7 +13,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es" className={`${drukHeavy.variable} ${roboto.variable}`}>
-      <body className="min-h-screen bg-background font-druk text-foreground antialiased">
+      <body className="min-h-screen bg-background font-druk text-foreground">
         {children}
       </body>
     </html>
