@@ -11,6 +11,9 @@ const drukHeavy = localFont({
 export const metadata: Metadata = {
   title: "Play Like Kids",
   description: "Play Like Kids — coming soon",
+  icons: {
+    icon: "/ASSETS/LOGO_PNG/logo-negro.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
