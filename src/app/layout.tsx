@@ -1,17 +1,25 @@
 import type { Metadata } from "next";
-import { drukHeavy, roboto } from "./fonts";
+import { roboto } from "./fonts";
+import { PageTransitionProvider } from "@/components/ui/PageTransitionWipe";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Play Like Kids",
-  description: "Play Like Kids — coming soon",
+  title: {
+    default: "Play Like Kids",
+    template: "%s — Play Like Kids",
+  },
+  description: "Creative Production Company / Mexico City",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="es" className={`${drukHeavy.variable} ${roboto.variable}`}>
-      <body className="min-h-screen bg-background font-druk text-foreground">
-        {children}
+    <html lang="es" className={roboto.variable}>
+      <body className="min-h-screen bg-background font-roboto text-foreground">
+        <PageTransitionProvider>{children}</PageTransitionProvider>
       </body>
     </html>
   );
