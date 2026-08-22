@@ -1,9 +1,15 @@
 import { SiteFooter } from "@/components/sections/SiteFooter";
 import { SiteHeader } from "@/components/sections/SiteHeader";
 import { HomeHero } from "@/components/sections/HomeHero";
+import { UnderConstruction } from "@/components/sections/UnderConstruction";
 import { getHero } from "@/lib/sanity/queries";
+import { isUnderConstruction } from "@/lib/site-mode";
 
 export default async function HomePage() {
+  if (isUnderConstruction()) {
+    return <UnderConstruction />;
+  }
+
   const hero = await getHero();
 
   return (

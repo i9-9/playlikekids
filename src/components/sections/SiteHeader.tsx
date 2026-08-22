@@ -14,8 +14,9 @@ export function SiteHeader({
     <header
       className={`flex w-full items-start justify-between gap-6 font-roboto text-nav font-bold uppercase tracking-wider ${colorClass} ${className}`}
     >
-      <p className="max-w-[20rem] leading-snug md:max-w-none">
-        Creative Production Company / Mexico City
+      <p className="leading-snug">
+        <span className="block">Creative Production Company</span>
+        <span className="block">Mexico City</span>
       </p>
       <a
         href="mailto:hello@playlikekids.tv"
