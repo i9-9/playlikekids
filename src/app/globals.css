@@ -18,9 +18,10 @@
   --color-border: #e5e5e5;
   --color-wipe: #ffffff;
 
-  /* Spacing tokens — desktop page margins are 38px */
+  /* Spacing tokens — page margins (nav, footer, content) */
   --page-gutter: 1rem;
   --section-gap: clamp(2rem, 5vw, 4rem);
+  --chrome-inset-y: 2rem;
 
   /* Type scale tokens */
   --text-meta: clamp(0.625rem, 0.9vw, 0.75rem);
@@ -28,19 +29,99 @@
   --text-body: clamp(0.75rem, 1vw, 0.875rem);
   --text-credit: clamp(0.625rem, 0.85vw, 0.75rem);
   --text-card-title: clamp(0.625rem, 0.9vw, 0.75rem);
-  --text-director-name: clamp(2.5rem, 6vw, 5.5rem);
-  --text-wordmark-footer: clamp(3.5rem, 10vw, 8.5rem);
-  --text-wordmark-hero: clamp(3.5rem, 10vw, 8.5rem);
+  --text-director-name: clamp(1.125rem, 1.5vw, 1.375rem);
+  --text-wordmark-footer: clamp(1.5rem, 7vw, 8.5rem);
+  --text-wordmark-hero: clamp(1.5rem, 7vw, 8.5rem);
 
   /* Layout */
   --header-height: 3.5rem;
   --media-aspect: 16 / 9;
+  --list-indent: 0;
+  --list-num: 2.5rem;
+  --list-gap: 8rem;
+  --list-names-inset: calc(var(--list-indent) + var(--list-num) + var(--list-gap));
+  --axis-name-box: 100%;
+  --axis-credits-box: 100%;
+  --profile-name-top: 0;
+  --credit-row-gap: 0.625rem;
+  --profile-list-gap: 2rem;
+  --footer-band: var(--text-wordmark-footer);
 }
 
 @media (min-width: 768px) {
   :root {
-    --page-gutter: 38px;
+    --page-gutter: 24px;
     --text-nav: 14px;
+    --chrome-inset-y: 1.25rem;
+    --list-indent: 20%;
+  }
+}
+
+/* Profile-only axes from the 1920×1080 artboard */
+.director-profile-page {
+  --text-director-name: clamp(1.5rem, 2vw, 2.25rem);
+  --axis-num: 22.104vw;
+  --axis-credits: 29.948vw;
+  --axis-names: 34.01vw;
+}
+
+@media (min-width: 768px) {
+  .director-profile-page {
+    --list-num: 1.5rem;
+    --list-indent: calc(var(--axis-num) - var(--page-gutter));
+    --list-gap: calc(var(--axis-names) - var(--axis-num) - var(--list-num));
+    --list-names-inset: calc(var(--axis-names) - var(--page-gutter));
+    --axis-name-box: calc(var(--axis-num) + var(--list-num) - var(--page-gutter));
+    --axis-credits-box: calc(var(--axis-credits) - var(--page-gutter));
+    --profile-name-top: 8.906vw;
+    --profile-player-top: 1.25rem;
+    --credit-row-gap: 2.6vw;
+    --profile-list-gap: 3.2vw;
+  }
+
+  /*
+    Shared columns with the numbered roster:
+    [indent | numbers | gap | names + player]
+  */
+  .director-profile-grid {
+    display: grid;
+    grid-template-columns:
+      var(--list-indent)
+      var(--list-num)
+      var(--list-gap)
+      minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    column-gap: 0;
+  }
+
+  .director-profile-heading,
+  .director-profile-nav {
+    grid-column: 1 / -1;
+  }
+
+  .director-profile-credits {
+    grid-column: 1 / 4;
+    grid-row: 2;
+    align-self: start;
+    padding-top: var(--profile-name-top);
+  }
+
+  .director-profile-player {
+    grid-column: 4;
+    grid-row: 2;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    padding-top: var(--profile-player-top);
+    overflow: hidden;
+    container-type: size;
+  }
+
+  /* Fit 16:9 inside the remaining row — shrink width if height is the limiter. */
+  .director-profile-player > * {
+    width: min(100%, calc(100cqh * 16 / 9));
+    max-height: 100%;
+    height: auto;
   }
 }
 
@@ -57,6 +138,17 @@
 
   a {
     @apply transition-opacity hover:opacity-60;
+  }
+}
+
+@layer utilities {
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 }
 

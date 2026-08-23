@@ -17,6 +17,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/directors/gabriela-olmedo",
+        destination: "/directors/gabriela-ortega",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

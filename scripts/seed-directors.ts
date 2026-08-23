@@ -41,13 +41,16 @@ async function main() {
         _type: "credit",
         brand: credit.brand,
         project: credit.project,
+        vimeoId: credit.vimeoId ?? undefined,
+        vimeoHash: credit.vimeoHash ?? undefined,
       })),
-      reel: director.reel ?? undefined,
     });
     console.log(`Upserted director: ${director.name}`);
   }
 
-  console.log("Seed complete. Upload hero images manually in /studio.");
+  console.log(
+    "Seed complete. In /studio, upload preview images if you want to override the first-film thumbnail.",
+  );
 }
 
 main().catch((error: unknown) => {

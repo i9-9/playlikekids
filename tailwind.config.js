@@ -31,6 +31,7 @@ module.exports = {
       spacing: {
         gutter: "var(--page-gutter)",
         section: "var(--section-gap)",
+        chrome: "var(--chrome-inset-y)",
       },
       maxWidth: {
         page: "100%",

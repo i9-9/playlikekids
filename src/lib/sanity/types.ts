@@ -3,6 +3,10 @@
 export type Credit = {
   brand: string;
   project: string;
+  /** Vimeo numeric ID. Null until a film is attached. */
+  vimeoId: string | null;
+  /** Privacy hash for unlisted videos (embed `?h=`). */
+  vimeoHash: string | null;
 };
 
 export type SanityImage = {
@@ -26,8 +30,8 @@ export type Director = {
   slug: string;
   order: number;
   credits: Credit[];
-  /** Vimeo video ID or URL. Thumbnail is resolved via /lib/vimeo. */
-  reel: string | null;
+  /** Still for /directors. Resolved to a CDN URL in queries. */
+  previewImageUrl: string | null;
 };
 
 export type HeroImage = {

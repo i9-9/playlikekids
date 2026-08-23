@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AspectMedia } from "@/components/ui/AspectMedia";
-import { formatCreditLabel } from "@/lib/credits";
+import { CreditLabel } from "@/components/ui/CreditLabel";
+import { PlayMark } from "@/components/ui/PlayMark";
 import type { Credit } from "@/lib/sanity/types";
 
 export type DirectorCardData = {
@@ -19,21 +20,11 @@ type DirectorCardProps = {
 
 export function DirectorCard({ director, className = "" }: DirectorCardProps) {
   const primaryCredit = director.credits[0];
-  const creditLabel = primaryCredit
-    ? formatCreditLabel(primaryCredit)
-    : undefined;
 
   return (
     <article className={`flex min-w-0 flex-col gap-2 ${className}`}>
-      <Link href={`/directors/${director.slug}`} className="block">
-        {director.thumbnailUrl && director.videoId ? (
-          <AspectMedia
-            kind="vimeo"
-            videoId={director.videoId}
-            thumbnailUrl={director.thumbnailUrl}
-            title={director.name}
-          />
-        ) : director.thumbnailUrl ? (
+      <Link href={`/directors/${director.slug}`} className="relative block">
+        {director.thumbnailUrl ? (
           <AspectMedia
             kind="image"
             src={director.thumbnailUrl}
@@ -42,14 +33,17 @@ export function DirectorCard({ director, className = "" }: DirectorCardProps) {
         ) : (
           <div className="aspect-video w-full bg-foreground/10" aria-hidden />
         )}
+        {director.videoId ? <PlayMark /> : null}
       </Link>
 
-      <div className="font-roboto text-card-title uppercase leading-snug tracking-wide">
-        <Link href={`/directors/${director.slug}`} className="font-bold">
+      <div className="font-roboto text-card-title font-medium uppercase leading-snug tracking-wide">
+        <Link href={`/directors/${director.slug}`} className="font-medium">
           {director.name}
         </Link>
-        {creditLabel ? (
-          <p className="mt-0.5 font-normal text-muted">{creditLabel}</p>
+        {primaryCredit ? (
+          <p className="mt-0.5 font-medium">
+            <CreditLabel credit={primaryCredit} />
+          </p>
         ) : null}
       </div>
     </article>

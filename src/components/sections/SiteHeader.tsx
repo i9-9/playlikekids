@@ -12,15 +12,15 @@ export function SiteHeader({
 
   return (
     <header
-      className={`flex w-full items-start justify-between gap-6 font-roboto text-nav font-bold uppercase tracking-wider ${colorClass} ${className}`}
+      className={`flex w-full items-start justify-between gap-6 font-roboto text-nav font-bold leading-none tracking-wide ${colorClass} ${className}`}
     >
-      <p className="leading-snug">
+      <p className="uppercase">
         <span className="block">Creative Production Company</span>
         <span className="block">Mexico City</span>
       </p>
       <a
         href="mailto:hello@playlikekids.tv"
-        className="shrink-0 lowercase tracking-wide"
+        className="block shrink-0 lowercase tracking-wide"
       >
         hello@playlikekids.tv
       </a>

@@ -17,6 +17,19 @@ export const credit = defineType({
       type: "string",
       validation: (rule) => rule.required(),
     }),
+    defineField({
+      name: "vimeoId",
+      title: "Vimeo ID",
+      type: "string",
+      description: "Numeric video ID, e.g. 1216249852.",
+    }),
+    defineField({
+      name: "vimeoHash",
+      title: "Vimeo privacy hash",
+      type: "string",
+      description:
+        "Only for unlisted videos. From the share URL after the ID (vimeo.com/ID/HASH).",
+    }),
   ],
   preview: {
     select: {

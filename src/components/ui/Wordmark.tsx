@@ -23,7 +23,7 @@ export function Wordmark({
 }: WordmarkProps) {
   return (
     <span
-      className={`font-druk leading-none tracking-tight ${sizeClassName[size]} ${className}`}
+      className={`font-druk leading-none tracking-normal ${sizeClassName[size]} ${className}`}
       {...props}
     >
       {children}

@@ -1,6 +1,6 @@
 /**
- * Resolves the client-selected Vimeo thumbnail for a video via oEmbed.
- * No manual image field — always derived from the video ID / URL.
+ * Resolves Vimeo thumbnails via oEmbed and builds watch / embed URLs.
+ * Unlisted videos need the privacy hash (`vimeoHash`) on both oEmbed and embed.
  */
 
 export type VimeoThumbnail = {
@@ -13,7 +13,7 @@ export type VimeoThumbnail = {
 
 const VIMEO_ID_PATTERN = /^\d+$/;
 const VIMEO_URL_PATTERN =
-  /(?:https?:\/\/)?(?:www\.|player\.)?vimeo\.com\/(?:video\/)?(\d+)/i;
+  /(?:https?:\/\/)?(?:www\.|player\.)?vimeo\.com\/(?:video\/)?(\d+)(?:\/([a-f0-9]+))?/i;
 
 export function extractVimeoId(reel: string): string | null {
   const trimmed = reel.trim();
@@ -24,12 +24,29 @@ export function extractVimeoId(reel: string): string | null {
   return match?.[1] ?? null;
 }
 
-export function toVimeoWatchUrl(videoId: string): string {
-  return `https://vimeo.com/${videoId}`;
+export function extractVimeoHash(reel: string): string | null {
+  const match = reel.trim().match(VIMEO_URL_PATTERN);
+  return match?.[2] ?? null;
 }
 
-export function toVimeoEmbedUrl(videoId: string): string {
-  return `https://player.vimeo.com/video/${videoId}`;
+export function toVimeoWatchUrl(videoId: string, hash?: string | null): string {
+  return hash
+    ? `https://vimeo.com/${videoId}/${hash}`
+    : `https://vimeo.com/${videoId}`;
+}
+
+export function toVimeoEmbedUrl(
+  videoId: string,
+  hash?: string | null,
+  options: { autoplay?: boolean } = {},
+): string {
+  const url = new URL(`https://player.vimeo.com/video/${videoId}`);
+  if (hash) url.searchParams.set("h", hash);
+  url.searchParams.set("title", "0");
+  url.searchParams.set("byline", "0");
+  url.searchParams.set("portrait", "0");
+  if (options.autoplay) url.searchParams.set("autoplay", "1");
+  return url.toString();
 }
 
 type OEmbedResponse = {
@@ -42,18 +59,19 @@ type OEmbedResponse = {
 };
 
 export async function getVimeoThumbnail(
-  reel: string,
+  videoId: string,
+  hash?: string | null,
 ): Promise<VimeoThumbnail | null> {
-  const videoId = extractVimeoId(reel);
-  if (!videoId) return null;
+  const id = extractVimeoId(videoId);
+  if (!id) return null;
 
   const oembedUrl = new URL("https://vimeo.com/api/oembed.json");
-  oembedUrl.searchParams.set("url", toVimeoWatchUrl(videoId));
+  oembedUrl.searchParams.set("url", toVimeoWatchUrl(id, hash));
   oembedUrl.searchParams.set("width", "1280");
 
   try {
     const response = await fetch(oembedUrl.toString(), {
-      next: { revalidate: 60 * 60 * 24, tags: [`vimeo:${videoId}`] },
+      next: { revalidate: 60 * 60 * 24, tags: [`vimeo:${id}`] },
     });
 
     if (!response.ok) {
@@ -66,7 +84,7 @@ export async function getVimeoThumbnail(
     }
 
     return {
-      videoId,
+      videoId: id,
       thumbnailUrl: data.thumbnail_url,
       title: data.title ?? null,
       width: data.thumbnail_width ?? data.width ?? null,

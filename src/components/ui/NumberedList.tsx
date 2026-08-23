@@ -12,16 +12,42 @@ type NumberedListProps = {
   className?: string;
 };
 
-/**
- * Generic numbered list — used on the directors grid and profile sidebar nav.
- */
+/** Shared number | name columns so “00 Directors” can sit on the same grid. */
+export const numberedListRowClassName =
+  "grid w-max max-w-full grid-cols-[var(--list-num)_auto] items-baseline gap-x-[var(--list-gap)]";
+
+export const numberedListTypeClassName =
+  "font-roboto text-body font-medium uppercase tracking-wide";
+
+export const numberedListIndentClassName = "w-full pl-[var(--list-indent)]";
+
+export function NumberedListHeading({
+  number = "00",
+  label = "Directors",
+  className = "",
+}: {
+  number?: string;
+  label?: string;
+  className?: string;
+}) {
+  return (
+    <p
+      className={`${numberedListIndentClassName} ${numberedListTypeClassName} ${className}`}
+    >
+      <span className={`${numberedListRowClassName} font-black`}>
+        <span className="tabular-nums">{number}</span>
+        <span>{label}</span>
+      </span>
+    </p>
+  );
+}
 export function NumberedList({
   items,
   activeHref,
   className = "",
 }: NumberedListProps) {
   return (
-    <ol className={`flex flex-col gap-1 font-roboto text-body uppercase tracking-wide ${className}`}>
+    <ol className={`flex flex-col gap-1 ${numberedListTypeClassName} ${numberedListIndentClassName} ${className}`}>
       {items.map((item) => {
         const isActive = activeHref === item.href;
 
@@ -29,7 +55,7 @@ export function NumberedList({
           <li key={item.href}>
             <Link
               href={item.href}
-              className={`inline-flex gap-3 ${isActive ? "font-bold" : "font-normal"}`}
+              className={`${numberedListRowClassName} ${isActive ? "font-black" : "font-medium"}`}
               aria-current={isActive ? "page" : undefined}
             >
               <span className="tabular-nums">{item.number}</span>
