@@ -27,18 +27,18 @@ export function DirectorsGrid({
   }));
 
   return (
-    <section className={`flex min-h-0 flex-1 flex-col pt-10 md:pt-14 ${className}`}>
-      <NumberedListHeading className="shrink-0" />
+    <section className={`flex min-h-0 flex-1 flex-col pt-6 md:pt-14 ${className}`}>
+      <NumberedListHeading className="mb-6 shrink-0 md:mb-8" />
 
-      <div className="flex min-h-0 flex-1 flex-col justify-center">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="flex min-h-0 flex-1 flex-col justify-center px-gutter">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 md:gap-4">
           {directors.map((director) => (
             <DirectorCard key={director.slug} director={director} />
           ))}
         </div>
       </div>
 
-      <NumberedList items={listItems} className="mb-8 shrink-0 md:mb-10" />
+      <NumberedList items={listItems} className="mt-6 mb-6 shrink-0 md:mt-8 md:mb-10" />
     </section>
   );
 }
