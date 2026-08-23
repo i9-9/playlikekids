@@ -83,7 +83,7 @@ export function SiteFooter({
         className={`relative z-30 flex h-10 min-w-0 max-w-full items-center justify-self-end overflow-visible col-start-2 row-start-1 pointer-events-auto md:h-auto md:col-start-3 ${wordmarkColor}`}
         aria-label="Directors"
       >
-        <Wordmark size="footer" className="block text-right leading-none" />
+        <Wordmark size="footer" className="block text-right" />
       </Link>
     </footer>
   );
