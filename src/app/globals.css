@@ -38,7 +38,7 @@
   --media-aspect: 16 / 9;
   --list-indent: 0;
   --list-num: 2.5rem;
-  --list-gap: 8rem;
+  --list-gap: 1rem;
   --list-names-inset: calc(var(--list-indent) + var(--list-num) + var(--list-gap));
   --axis-name-box: 100%;
   --axis-credits-box: 100%;
@@ -54,6 +54,7 @@
     --text-nav: 14px;
     --chrome-inset-y: 1.25rem;
     --list-indent: 20%;
+    --list-gap: 8rem;
   }
 }
 
