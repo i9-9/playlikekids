@@ -19,7 +19,7 @@ export const numberedListRowClassName =
 export const numberedListTypeClassName =
   "font-roboto text-body font-medium uppercase tracking-wide";
 
-export const numberedListIndentClassName = "w-full pl-[var(--list-indent)]";
+export const numberedListIndentClassName = "pl-[var(--list-indent)]";
 
 export function NumberedListHeading({
   number = "00",
@@ -32,7 +32,7 @@ export function NumberedListHeading({
 }) {
   return (
     <p
-      className={`${numberedListIndentClassName} ${numberedListTypeClassName} ${className}`}
+      className={`w-full ${numberedListIndentClassName} ${numberedListTypeClassName} ${className}`}
     >
       <span className={`${numberedListRowClassName} font-black`}>
         <span className="tabular-nums">{number}</span>
@@ -47,7 +47,9 @@ export function NumberedList({
   className = "",
 }: NumberedListProps) {
   return (
-    <ol className={`flex flex-col gap-1 ${numberedListTypeClassName} ${numberedListIndentClassName} ${className}`}>
+    <ol
+      className={`mx-auto flex w-max max-w-full flex-col gap-1 md:mx-0 md:w-full ${numberedListTypeClassName} ${numberedListIndentClassName} ${className}`}
+    >
       {items.map((item) => {
         const isActive = activeHref === item.href;
 

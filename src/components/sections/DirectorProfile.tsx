@@ -61,7 +61,7 @@ export function DirectorProfile({
         <h1 className="min-w-0 font-roboto text-director-name font-normal uppercase leading-none tracking-normal md:w-[var(--list-indent)] md:text-right">
           {director.name}
         </h1>
-        <ul className="flex w-full flex-col items-start gap-[var(--credit-row-gap)] font-roboto text-credit font-normal uppercase leading-none tracking-[0.2em] md:w-[var(--axis-credits-box)] md:items-end">
+        <ul className="mx-auto flex w-max max-w-full flex-col items-start gap-[var(--credit-row-gap)] font-roboto text-credit font-medium uppercase leading-none tracking-[0.2em] md:mx-0 md:w-[var(--axis-credits-box)] md:items-end">
           {films.map((film, index) => {
             const selected = index === activeIndex;
             const canPlay = Boolean(film.videoId);
