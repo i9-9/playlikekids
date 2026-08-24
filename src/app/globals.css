@@ -47,7 +47,9 @@
   --axis-name-box: 100%;
   --axis-credits-box: 100%;
   --profile-name-top: 0;
+  --profile-player-top: 0;
   --credit-row-gap: 0.625rem;
+  --credit-name-gap: var(--credit-row-gap);
   --profile-list-gap: 2rem;
   --footer-band: var(--text-wordmark-footer);
   /* 5-up column at 1440 — mobile slider cards keep this size */
@@ -77,6 +79,36 @@
   --axis-num: 22.104vw;
   --axis-credits: 29.948vw;
   --axis-names: 34.01vw;
+  /* Mobile: extra air under 00 Directors, then credits, then the player */
+  --profile-name-top: 6.5rem;
+  --profile-player-top: 2.25rem;
+  --profile-list-gap: 3.25rem;
+  --credit-row-gap: 0.875rem;
+  --credit-name-gap: 1.625rem;
+}
+
+/* Center 00 Directors + roster as one auto column, like /directors */
+.director-profile-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+}
+
+.director-profile-heading,
+.director-profile-nav {
+  grid-column: 2;
+}
+
+.director-profile-credits,
+.director-profile-player {
+  grid-column: 1 / -1;
+}
+
+.director-profile-credits {
+  padding-top: var(--profile-name-top);
+}
+
+.director-profile-player {
+  padding-top: var(--profile-player-top);
 }
 
 @media (min-width: 768px) {
@@ -90,6 +122,7 @@
     --profile-name-top: 8.906vw;
     --profile-player-top: 1.25rem;
     --credit-row-gap: 2.6vw;
+    --credit-name-gap: var(--credit-row-gap);
     --profile-list-gap: 3.2vw;
   }
 
@@ -98,7 +131,6 @@
     [indent | numbers | gap | names + player]
   */
   .director-profile-grid {
-    display: grid;
     grid-template-columns:
       var(--list-indent)
       var(--list-num)
@@ -117,7 +149,6 @@
     grid-column: 1 / 4;
     grid-row: 2;
     align-self: start;
-    padding-top: var(--profile-name-top);
   }
 
   .director-profile-player {
@@ -126,7 +157,6 @@
     min-width: 0;
     min-height: 0;
     height: 100%;
-    padding-top: var(--profile-player-top);
     overflow: hidden;
     container-type: size;
   }

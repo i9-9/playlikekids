@@ -57,11 +57,11 @@ export function DirectorProfile({
 
   return (
     <>
-      <div className="director-profile-credits mt-6 flex flex-col gap-[var(--credit-row-gap)] md:mt-0">
-        <h1 className="min-w-0 font-roboto text-director-name font-normal uppercase leading-none tracking-normal md:w-[var(--list-indent)] md:text-right">
+      <div className="director-profile-credits flex flex-col gap-[var(--credit-name-gap)]">
+        <h1 className="min-w-0 pr-[20%] text-right font-roboto text-director-name font-normal uppercase leading-none tracking-normal md:w-[var(--list-indent)] md:pr-0">
           {director.name}
         </h1>
-        <ul className="mx-auto flex w-max max-w-full flex-col items-start gap-[var(--credit-row-gap)] font-roboto text-credit font-medium uppercase leading-none tracking-[0.2em] md:mx-0 md:w-[var(--axis-credits-box)] md:items-end">
+        <ul className="flex w-1/2 flex-col items-end gap-[var(--credit-row-gap)] self-start font-roboto text-credit font-medium uppercase leading-none tracking-[0.2em] md:w-[var(--axis-credits-box)] md:self-auto">
           {films.map((film, index) => {
             const selected = index === activeIndex;
             const canPlay = Boolean(film.videoId);
@@ -76,7 +76,7 @@ export function DirectorProfile({
                       setPlaying(true);
                     }}
                     aria-pressed={selected}
-                    className={`text-left uppercase tracking-[0.2em] md:text-right ${
+                    className={`text-right uppercase tracking-[0.2em] ${
                       selected
                         ? "text-foreground"
                         : "text-foreground/45 hover:text-foreground"
@@ -85,7 +85,7 @@ export function DirectorProfile({
                     <CreditLabel credit={film} />
                   </button>
                 ) : (
-                  <span>
+                  <span className="text-right">
                     <CreditLabel credit={film} />
                   </span>
                 )}
@@ -95,7 +95,7 @@ export function DirectorProfile({
         </ul>
       </div>
 
-      <div className="director-profile-player mt-6 min-h-0 min-w-0 md:mt-0">
+      <div className="director-profile-player min-h-0 min-w-0">
         {media}
       </div>
     </>
