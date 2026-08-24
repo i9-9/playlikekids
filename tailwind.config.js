@@ -32,6 +32,10 @@ module.exports = {
         gutter: "var(--page-gutter)",
         section: "var(--section-gap)",
         chrome: "var(--chrome-inset-y)",
+        lockup: "var(--footer-lockup)",
+      },
+      width: {
+        director: "var(--director-card-w)",
       },
       maxWidth: {
         page: "100%",

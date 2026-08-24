@@ -13,7 +13,7 @@ export function PlayMark({ className = "" }: PlayMarkProps) {
     >
       <svg
         viewBox="0 0 24 24"
-        className="ml-1 h-10 w-10 fill-white md:ml-1.5 md:h-12 md:w-12"
+        className="ml-[8%] h-[62%] w-[62%] fill-white"
       >
         <path d="M8 5.14v13.72L19 12 8 5.14z" />
       </svg>

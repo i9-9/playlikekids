@@ -30,7 +30,11 @@
   --text-credit: clamp(0.625rem, 0.85vw, 0.75rem);
   --text-card-title: clamp(0.625rem, 0.9vw, 0.75rem);
   --text-director-name: clamp(1.125rem, 1.5vw, 1.375rem);
-  --text-wordmark-footer: clamp(1.5rem, 7vw, 8.5rem);
+  /* Footer lockup — logo box height. Directors is sized so Druk cap-height matches it. */
+  --footer-lockup: 2.5rem;
+  --druk-directors-ink: 0.756;
+  --druk-directors-ink-top: 0.0625;
+  --text-wordmark-footer: calc(var(--footer-lockup) / var(--druk-directors-ink));
   --text-wordmark-hero: clamp(1.5rem, 7vw, 8.5rem);
 
   /* Layout */
@@ -46,6 +50,8 @@
   --credit-row-gap: 0.625rem;
   --profile-list-gap: 2rem;
   --footer-band: var(--text-wordmark-footer);
+  /* 5-up column at 1440 — mobile slider cards keep this size */
+  --director-card-w: calc((90rem - 3rem - 4rem) / 5);
 }
 
 @media (min-width: 768px) {
@@ -55,6 +61,13 @@
     --chrome-inset-y: 1.25rem;
     --list-indent: 20%;
     --list-gap: 8rem;
+    --footer-lockup: 4rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --footer-lockup: 5rem;
   }
 }
 
@@ -150,6 +163,11 @@
 
   .scrollbar-none::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Pull Druk caps up so their ink sits on the same row as the footer logo. */
+  .wordmark-lockup {
+    translate: 0 calc(var(--druk-directors-ink-top) * -1em);
   }
 }
 

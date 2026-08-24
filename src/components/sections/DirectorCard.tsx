@@ -36,7 +36,7 @@ export function DirectorCard({ director, className = "" }: DirectorCardProps) {
         {director.videoId ? <PlayMark /> : null}
       </Link>
 
-      <div className="font-roboto text-card-title font-medium uppercase leading-snug tracking-wide">
+      <div className="min-w-0 font-roboto text-card-title font-medium uppercase leading-snug tracking-wide">
         <Link href={`/directors/${director.slug}`} className="font-medium">
           {director.name}
         </Link>

@@ -65,7 +65,7 @@ export function SiteFooter({
       >
         <Logo
           variant={logoVariant}
-          className="h-10 w-auto max-w-full md:h-16 lg:h-20"
+          className="h-lockup w-auto max-w-full"
         />
       </Link>
 
@@ -80,10 +80,10 @@ export function SiteFooter({
       <Link
         href="/directors"
         onClick={handleDirectorsClick}
-        className={`relative z-30 flex h-10 min-w-0 max-w-full items-center justify-self-end overflow-visible col-start-2 row-start-1 pointer-events-auto md:h-auto md:col-start-3 ${wordmarkColor}`}
+        className={`relative z-30 flex h-lockup min-w-0 max-w-full items-start justify-self-end overflow-visible col-start-2 row-start-1 pointer-events-auto md:col-start-3 ${wordmarkColor}`}
         aria-label="Directors"
       >
-        <Wordmark size="footer" className="block text-right" />
+        <Wordmark size="footer" className="wordmark-lockup block text-right" />
       </Link>
     </footer>
   );
