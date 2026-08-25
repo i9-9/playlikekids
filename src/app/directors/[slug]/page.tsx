@@ -45,20 +45,22 @@ export default async function DirectorPage({ params }: DirectorPageProps) {
   }));
 
   return (
-    <main className="director-profile-page director-profile-grid flex min-h-0 flex-1 flex-col pt-8 md:h-full md:overflow-hidden md:pt-12">
+    <main className="director-profile-page director-profile-grid h-full min-h-0 flex-1 overflow-y-auto pt-8 md:overflow-hidden md:pt-12">
       <NumberedListHeading className="director-profile-heading shrink-0" />
-      <DirectorProfile
-        director={{
-          name: director.name,
-          films,
-          fallbackThumbnailUrl: films[0]?.thumbnailUrl ?? null,
-        }}
-      />
-      <NumberedList
-        items={navItems}
-        activeHref={`/directors/${director.slug}`}
-        className="director-profile-nav relative z-10 mt-auto shrink-0 pt-[var(--profile-list-gap)] md:mt-0"
-      />
+      <div className="director-profile-stack">
+        <DirectorProfile
+          director={{
+            name: director.name,
+            films,
+            fallbackThumbnailUrl: films[0]?.thumbnailUrl ?? null,
+          }}
+        />
+        <NumberedList
+          items={navItems}
+          activeHref={`/directors/${director.slug}`}
+          className="director-profile-nav relative z-10 shrink-0 pt-[var(--profile-list-gap)]"
+        />
+      </div>
     </main>
   );
 }

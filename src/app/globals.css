@@ -79,21 +79,32 @@
   --axis-num: 22.104vw;
   --axis-credits: 29.948vw;
   --axis-names: 34.01vw;
-  /* Mobile: extra air under 00 Directors, then credits, then the player */
-  --profile-name-top: 6.5rem;
+  /* Mobile: keep 00 Directors at the top; center the rest in the leftover height */
+  --profile-name-top: 0;
   --profile-player-top: 2.25rem;
   --profile-list-gap: 3.25rem;
   --credit-row-gap: 0.875rem;
   --credit-name-gap: 1.625rem;
 }
 
-/* Center 00 Directors + roster as one auto column, like /directors */
 .director-profile-grid {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
-.director-profile-heading,
+.director-profile-heading {
+  grid-column: 2;
+}
+
+.director-profile-stack {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-content: center;
+  min-height: 0;
+}
+
 .director-profile-nav {
   grid-column: 2;
 }
@@ -138,6 +149,10 @@
       minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr) auto;
     column-gap: 0;
+  }
+
+  .director-profile-stack {
+    display: contents;
   }
 
   .director-profile-heading,

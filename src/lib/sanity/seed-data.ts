@@ -18,7 +18,7 @@ export const SEED_DIRECTORS: Omit<Director, "_id">[] = [
     credits: [
       {
         brand: "Ministry of Sports",
-        project: "Kindom of Saudi Arabia",
+        project: "Kingdom of Saudi Arabia",
         vimeoId: "1216249852",
         vimeoHash: null,
       },
