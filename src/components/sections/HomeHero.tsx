@@ -13,6 +13,7 @@ type HomeHeroProps = {
 };
 
 const FADE_DURATION_S = 1.1;
+const INTRO_DURATION_S = 0.8;
 
 /**
  * Full-bleed hero that auto-cycles three frames with a crossfade loop.
@@ -25,15 +26,43 @@ export function HomeHero({
 }: HomeHeroProps) {
   const frames = images.slice(0, 3);
   const [index, setIndex] = useState(0);
+  const [intro, setIntro] = useState(true);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setIntro(false), INTRO_DURATION_S * 1000);
+    return () => window.clearTimeout(id);
+  }, []);
 
   useEffect(() => {
     if (frames.length < 2) return;
 
-    const id = window.setInterval(() => {
-      setIndex((current) => (current + 1) % frames.length);
-    }, intervalMs);
+    let intervalId: number | undefined;
 
-    return () => window.clearInterval(id);
+    const start = () => {
+      if (intervalId !== undefined) return;
+      intervalId = window.setInterval(() => {
+        setIndex((current) => (current + 1) % frames.length);
+      }, intervalMs);
+    };
+
+    const stop = () => {
+      if (intervalId === undefined) return;
+      window.clearInterval(intervalId);
+      intervalId = undefined;
+    };
+
+    const onVisibility = () => {
+      if (document.hidden) stop();
+      else start();
+    };
+
+    if (!document.hidden) start();
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [frames.length, intervalMs]);
 
   // No content images yet — solid plane only (ref-design PNGs are not used here).
@@ -48,14 +77,17 @@ export function HomeHero({
 
   return (
     <div className={`absolute inset-0 overflow-hidden ${className}`}>
-      <AnimatePresence mode="sync" initial={false}>
+      <AnimatePresence mode="sync">
         <motion.div
           key={frames[index]?.url ?? index}
           className="absolute inset-0"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: FADE_DURATION_S, ease: "easeInOut" }}
+          transition={{
+            duration: intro ? INTRO_DURATION_S : FADE_DURATION_S,
+            ease: "easeInOut",
+          }}
         >
           <Image
             src={frames[index].url}

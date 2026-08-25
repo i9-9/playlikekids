@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "tsx scripts/seed-directors.ts",
+    "seed": "node --env-file=.env.local --import tsx scripts/seed-directors.ts",
     "sanity:login": "sanity login --provider google",
     "sanity:init": "sanity init --env .env.local --project-name \"Play Like Kids\" --dataset production --typescript --nextjs-embed-studio --nextjs-append-env -y"
   },

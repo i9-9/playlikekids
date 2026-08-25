@@ -85,6 +85,9 @@
   --profile-list-gap: 3.25rem;
   --credit-row-gap: 0.875rem;
   --credit-name-gap: 1.625rem;
+  /* Mobile roster: more air between 01 and the name than the default 1rem */
+  --list-num: 1.75rem;
+  --list-gap: 4rem;
 }
 
 .director-profile-grid {
@@ -195,8 +198,30 @@
     font-family: var(--font-roboto), ui-sans-serif, system-ui, sans-serif;
   }
 
-  a {
-    @apply transition-opacity hover:opacity-60;
+  a:not(.link-logo):not(.link-wordmark):not(.link-poster) {
+    @apply transition-opacity hover:opacity-70;
+    transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+  }
+
+  a:not(.link-logo):not(.link-wordmark):not(.link-poster):focus-visible {
+    outline: 1px solid currentColor;
+    outline-offset: 3px;
+  }
+
+  a.link-logo {
+    transition: opacity 200ms cubic-bezier(0.76, 0, 0.24, 1);
+  }
+
+  a.link-logo:hover {
+    opacity: 0.9;
+  }
+
+  a.link-wordmark {
+    transition: opacity 220ms cubic-bezier(0.76, 0, 0.24, 1);
+  }
+
+  a.link-wordmark:hover {
+    opacity: 0.85;
   }
 }
 

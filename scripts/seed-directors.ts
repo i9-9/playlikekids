@@ -1,17 +1,23 @@
 /**
- * Seeds directors into Sanity once a project + write token exist.
+ * Seeds directors and the home hero into Sanity.
  *
  * Usage:
- *   SANITY_API_TOKEN=... NEXT_PUBLIC_SANITY_PROJECT_ID=... npm run seed
+ *   npm run seed
+ *
+ * Loads `.env.local` (see the `seed` script in package.json).
  */
+import { createReadStream } from "node:fs";
+import path from "node:path";
 import { createClient } from "@sanity/client";
-import { SEED_DIRECTORS } from "../src/lib/sanity/seed-data";
+import { LOCAL_HERO_IMAGES, SEED_DIRECTORS } from "../src/lib/sanity/seed-data";
 
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET ?? "production";
 const token = process.env.SANITY_API_TOKEN;
 const apiVersion =
   process.env.NEXT_PUBLIC_SANITY_API_VERSION ?? "2025-01-01";
+
+const HERO_DOC_ID = "home-hero";
 
 async function main() {
   if (!projectId) {
@@ -48,8 +54,41 @@ async function main() {
     console.log(`Upserted director: ${director.name}`);
   }
 
+  const heroImages = await Promise.all(
+    LOCAL_HERO_IMAGES.map(async (frame, index) => {
+      const filePath = path.join(
+        process.cwd(),
+        "public",
+        frame.url.replace(/^\//, ""),
+      );
+      const asset = await client.assets.upload(
+        "image",
+        createReadStream(filePath),
+        { filename: path.basename(filePath) },
+      );
+      console.log(`Uploaded hero frame: ${path.basename(filePath)}`);
+      return {
+        _type: "image" as const,
+        _key: `hero-frame-${index + 1}`,
+        asset: {
+          _type: "reference" as const,
+          _ref: asset._id,
+        },
+        alt: frame.alt,
+      };
+    }),
+  );
+
+  await client.createOrReplace({
+    _id: HERO_DOC_ID,
+    _type: "hero",
+    title: "Home Hero",
+    images: heroImages,
+  });
+  console.log("Upserted Home Hero");
+
   console.log(
-    "Seed complete. In /studio, upload preview images if you want to override the first-film thumbnail.",
+    "Seed complete. In /studio, upload director preview images if you want to override the first-film thumbnail.",
   );
 }
 

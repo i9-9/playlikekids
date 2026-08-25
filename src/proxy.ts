@@ -26,7 +26,7 @@ function previewCookieOptions(request: NextRequest) {
   };
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const secret = process.env.SITE_PREVIEW_SECRET;
   const previewParam = request.nextUrl.searchParams.get(SITE_PREVIEW_QUERY);
 

@@ -61,7 +61,7 @@ export function SiteFooter({
       <Link
         href="/"
         aria-label="Play Like Kids home"
-        className="relative z-30 min-w-0 justify-self-start pointer-events-auto"
+        className="link-logo relative z-30 min-w-0 justify-self-start pointer-events-auto"
       >
         <Logo
           variant={logoVariant}
@@ -80,7 +80,7 @@ export function SiteFooter({
       <Link
         href="/directors"
         onClick={handleDirectorsClick}
-        className={`relative z-30 flex h-lockup min-w-0 max-w-full items-start justify-self-end overflow-visible col-start-2 row-start-1 pointer-events-auto md:col-start-3 ${wordmarkColor}`}
+        className={`link-wordmark relative z-30 flex h-lockup min-w-0 max-w-full items-start justify-self-end overflow-visible col-start-2 row-start-1 pointer-events-auto md:col-start-3 ${wordmarkColor}`}
         aria-label="Directors"
       >
         <Wordmark size="footer" className="wordmark-lockup block text-right" />

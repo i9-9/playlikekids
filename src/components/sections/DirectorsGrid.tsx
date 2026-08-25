@@ -3,10 +3,8 @@ import {
   NumberedListHeading,
   type NumberedListItem,
 } from "@/components/ui/NumberedList";
-import {
-  DirectorCard,
-  type DirectorCardData,
-} from "@/components/sections/DirectorCard";
+import { type DirectorCardData } from "@/components/sections/DirectorCard";
+import { DirectorsGridMotion } from "@/components/sections/DirectorsGridMotion";
 
 type DirectorsGridProps = {
   directors: DirectorCardData[];
@@ -32,15 +30,10 @@ export function DirectorsGrid({
     >
       <NumberedListHeading className="col-start-2 row-start-2 w-full shrink-0 md:col-start-1" />
 
-      <div className="col-span-3 row-start-3 -mx-gutter flex min-h-0 flex-col md:col-span-1 md:mx-0">
+      {/* Mobile: keep the slider row at content height so overflowing posters stay tappable, and pad past the footer lockup. */}
+      <div className="col-span-3 row-start-3 -mx-gutter flex flex-col pb-[var(--footer-lockup)] md:col-span-1 md:mx-0 md:min-h-0 md:pb-0">
         <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-gutter scroll-px-gutter scrollbar-none md:grid md:grid-cols-5 md:snap-none md:overflow-visible md:px-0 md:scroll-p-0">
-          {directors.map((director) => (
-            <DirectorCard
-              key={director.slug}
-              director={director}
-              className="w-director shrink-0 snap-start md:w-auto"
-            />
-          ))}
+          <DirectorsGridMotion directors={directors} />
         </div>
       </div>
 

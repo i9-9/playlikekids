@@ -49,7 +49,9 @@ export default async function DirectorPage({ params }: DirectorPageProps) {
       <NumberedListHeading className="director-profile-heading shrink-0" />
       <div className="director-profile-stack">
         <DirectorProfile
+          key={director.slug}
           director={{
+            slug: director.slug,
             name: director.name,
             films,
             fallbackThumbnailUrl: films[0]?.thumbnailUrl ?? null,
