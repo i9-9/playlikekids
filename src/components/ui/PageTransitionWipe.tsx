@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import {
   createContext,
   useCallback,
@@ -12,7 +12,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 type WipeOptions = {
   href: string;
@@ -39,25 +39,42 @@ type PageTransitionProviderProps = {
   children: ReactNode;
 };
 
+function dismissWipe(
+  destinationRef: { current: string | null },
+  didPushRef: { current: boolean },
+  setIsWiping: (value: boolean) => void,
+  setSkipBand: (value: boolean) => void,
+) {
+  destinationRef.current = null;
+  didPushRef.current = false;
+  setIsWiping(false);
+  setSkipBand(false);
+}
+
 /**
  * Owns wipe state + navigation timing (band + rise, then push).
+ * Cover stays opaque until the destination route has committed and painted.
  */
 export function PageTransitionProvider({
   children,
 }: PageTransitionProviderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isWiping, setIsWiping] = useState(false);
   const [skipBand, setSkipBand] = useState(false);
-  const pendingHrefRef = useRef<string | null>(null);
+  const destinationRef = useRef<string | null>(null);
+  const didPushRef = useRef(false);
 
   const startWipe = useCallback(
     ({ href, skipBand: nextSkipBand = false }: WipeOptions) => {
       if (isWiping) return;
-      pendingHrefRef.current = href;
+      destinationRef.current = href;
+      didPushRef.current = false;
       setSkipBand(nextSkipBand);
       setIsWiping(true);
+      router.prefetch(href);
     },
-    [isWiping],
+    [isWiping, router],
   );
 
   useEffect(() => {
@@ -65,18 +82,45 @@ export function PageTransitionProvider({
 
     const totalMs = (skipBand ? 0 : BAND_DURATION_MS) + RISE_DURATION_MS;
     const timer = window.setTimeout(() => {
-      const href = pendingHrefRef.current;
+      const href = destinationRef.current;
       if (!href) return;
-      pendingHrefRef.current = null;
+      didPushRef.current = true;
       router.push(href);
-      window.setTimeout(() => {
-        setIsWiping(false);
-        setSkipBand(false);
-      }, 160);
     }, totalMs);
 
     return () => window.clearTimeout(timer);
   }, [isWiping, skipBand, router]);
+
+  useEffect(() => {
+    if (!isWiping) return;
+    const href = destinationRef.current;
+    if (!href || !didPushRef.current) return;
+    if (pathname !== href) return;
+
+    let inner = 0;
+    const outer = window.requestAnimationFrame(() => {
+      inner = window.requestAnimationFrame(() => {
+        dismissWipe(destinationRef, didPushRef, setIsWiping, setSkipBand);
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(outer);
+      window.cancelAnimationFrame(inner);
+    };
+  }, [isWiping, pathname]);
+
+  useEffect(() => {
+    if (!isWiping) return;
+
+    const fallbackMs =
+      (skipBand ? 0 : BAND_DURATION_MS) + RISE_DURATION_MS + 8000;
+    const timer = window.setTimeout(() => {
+      dismissWipe(destinationRef, didPushRef, setIsWiping, setSkipBand);
+    }, fallbackMs);
+
+    return () => window.clearTimeout(timer);
+  }, [isWiping, skipBand]);
 
   const value = useMemo(
     () => ({
@@ -184,57 +228,53 @@ export function PageTransitionWipe({
 
   const isRise = phase === "rise";
 
+  if (!active || bandHeight <= 0) return null;
+
   return (
-    <AnimatePresence>
-      {active && bandHeight > 0 ? (
-        <motion.div
-          key="page-wipe"
-          className={`pointer-events-none fixed left-0 z-0 bg-wipe ${className}`}
-          style={{
-            width: "100vw",
-            transformOrigin: isRise ? "bottom center" : "left center",
-          }}
-          initial={{
-            top: bandTop,
-            height: bandHeight,
-            scaleX: skipBand ? 1 : 0,
-            scaleY: 1,
-          }}
-          animate={
-            isRise
-              ? {
-                  top: 0,
-                  height: "100vh",
-                  scaleX: 1,
-                  scaleY: 1,
-                }
-              : {
-                  top: bandTop,
-                  height: bandHeight,
-                  scaleX: 1,
-                  scaleY: 1,
-                }
-          }
-          exit={{ opacity: 0 }}
-          transition={
-            isRise
-              ? {
-                  duration: riseDurationMs / 1000,
-                  ease: [0.76, 0, 0.24, 1],
-                }
-              : {
-                  scaleX: {
-                    duration: bandDurationMs / 1000,
-                    ease: [0.76, 0, 0.24, 1],
-                  },
-                  top: { duration: 0 },
-                  height: { duration: 0 },
-                  scaleY: { duration: 0 },
-                }
-          }
-          aria-hidden="true"
-        />
-      ) : null}
-    </AnimatePresence>
+    <motion.div
+      className={`pointer-events-none fixed left-0 z-0 bg-wipe ${className}`}
+      style={{
+        width: "100vw",
+        transformOrigin: isRise ? "bottom center" : "left center",
+      }}
+      initial={{
+        top: bandTop,
+        height: bandHeight,
+        scaleX: skipBand ? 1 : 0,
+        scaleY: 1,
+      }}
+      animate={
+        isRise
+          ? {
+              top: 0,
+              height: "100vh",
+              scaleX: 1,
+              scaleY: 1,
+            }
+          : {
+              top: bandTop,
+              height: bandHeight,
+              scaleX: 1,
+              scaleY: 1,
+            }
+      }
+      transition={
+        isRise
+          ? {
+              duration: riseDurationMs / 1000,
+              ease: [0.76, 0, 0.24, 1],
+            }
+          : {
+              scaleX: {
+                duration: bandDurationMs / 1000,
+                ease: [0.76, 0, 0.24, 1],
+              },
+              top: { duration: 0 },
+              height: { duration: 0 },
+              scaleY: { duration: 0 },
+            }
+      }
+      aria-hidden="true"
+    />
   );
 }
