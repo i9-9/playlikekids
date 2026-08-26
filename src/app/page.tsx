@@ -49,9 +49,9 @@ export default async function HomePage() {
   const hero = await getHero();
 
   return (
-    <main className="relative min-h-0 flex-1">
+    <>
       <h1 className="sr-only">{SITE_NAME}</h1>
       <HomeHero images={hero.images} />
-    </main>
+    </>
   );
 }
