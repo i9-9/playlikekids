@@ -32,7 +32,7 @@ export function DirectorCard({ director, className = "" }: DirectorCardProps) {
             <AspectMedia
               kind="image"
               src={director.thumbnailUrl}
-              alt=""
+              alt={`${director.name}${primaryCredit ? ` — ${primaryCredit.brand} ${primaryCredit.project}` : ""}`}
             />
           ) : (
             <div className="aspect-video w-full overflow-hidden bg-foreground/10" aria-hidden />

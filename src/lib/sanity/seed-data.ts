@@ -6,7 +6,7 @@ import type { Director, Hero } from "./types";
  *
  * Film order is the on-site order. `vimeoHash` is only set for unlisted videos.
  *
- * Do not seed hero frames from `public/ref design/` — those PNGs are layout
+ * Do not seed hero frames from layout mockups —
  * references only (they already bake in chrome) and must not ship as content.
  */
 export const SEED_DIRECTORS: Omit<Director, "_id">[] = [
@@ -180,7 +180,7 @@ export const SEED_DIRECTORS: Omit<Director, "_id">[] = [
 
 /**
  * Local hero frames for development / until Sanity has a published hero doc.
- * Real photography only — never use `public/ref design/` mockups here.
+ * Real photography only — never use layout mockups here.
  */
 export const LOCAL_HERO_IMAGES: Hero["images"] = [
   {

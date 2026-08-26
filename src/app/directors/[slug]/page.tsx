@@ -7,10 +7,15 @@ import {
   getAllDirectors,
   getDirectorBySlug,
 } from "@/lib/sanity/queries";
+import { SITE_NAME } from "@/lib/site";
 
 type DirectorPageProps = {
   params: Promise<{ slug: string }>;
 };
+
+function directorDescription(name: string): string {
+  return `${name} — director at Play Like Kids, a creative production company in Mexico City. Watch selected films and commercials.`;
+}
 
 export async function generateStaticParams() {
   const directors = await getAllDirectors();
@@ -23,7 +28,37 @@ export async function generateMetadata({
   const { slug } = await params;
   const director = await getDirectorBySlug(slug);
   if (!director) return { title: "404" };
-  return { title: director.name };
+
+  const description = directorDescription(director.name);
+  const path = `/directors/${director.slug}`;
+
+  return {
+    title: director.name,
+    description,
+    alternates: {
+      canonical: path,
+    },
+    openGraph: {
+      type: "profile",
+      title: `${director.name} — ${SITE_NAME}`,
+      description,
+      url: path,
+      images: [
+        {
+          url: "/ASSETS/LOGO_PNG/logo-tierra.png",
+          width: 1585,
+          height: 776,
+          alt: director.name,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${director.name} — ${SITE_NAME}`,
+      description,
+      images: ["/ASSETS/LOGO_PNG/logo-tierra.png"],
+    },
+  };
 }
 
 export default async function DirectorPage({ params }: DirectorPageProps) {
@@ -46,7 +81,10 @@ export default async function DirectorPage({ params }: DirectorPageProps) {
 
   return (
     <main className="director-profile-page director-profile-grid h-full min-h-0 flex-1 overflow-y-auto pt-8 md:overflow-hidden md:pt-12">
-      <NumberedListHeading className="director-profile-heading shrink-0" />
+      <NumberedListHeading
+        as="h2"
+        className="director-profile-heading shrink-0"
+      />
       <div className="director-profile-stack">
         <DirectorProfile
           key={director.slug}

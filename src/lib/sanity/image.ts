@@ -6,7 +6,11 @@ import { sanityClient } from "./client";
 
 const builder = createImageUrlBuilder(sanityClient);
 
-/** Builds CDN URLs for Sanity-hosted images only (not Vimeo thumbnails). */
+/**
+ * Builds CDN URLs for Sanity-hosted images only (not Vimeo thumbnails).
+ * Prefer the raw asset URL and let `next/image` handle resize/quality —
+ * avoid chaining `.width()`/`.quality()` here (double-processing).
+ */
 export function urlForImage(source: SanityImageSource) {
   return builder.image(source);
 }

@@ -21,10 +21,8 @@ function toDirector(doc: DirectorDocument): Director {
   let previewImageUrl: string | null = null;
   if (doc.previewImage) {
     try {
-      previewImageUrl = urlForImage(doc.previewImage)
-        .width(1600)
-        .quality(85)
-        .url();
+      // Raw Sanity CDN URL — next/image handles resize + encode.
+      previewImageUrl = urlForImage(doc.previewImage).url();
     } catch {
       previewImageUrl = null;
     }
@@ -137,11 +135,14 @@ export async function getHero(): Promise<Hero> {
 
     const images =
       doc?.images
-        ?.map((image) => {
+        ?.map((image, index) => {
           try {
             return {
-              url: urlForImage(image).width(2400).quality(85).url(),
-              alt: image.alt?.trim() || "Home hero",
+              // Raw Sanity CDN URL — next/image handles resize + encode.
+              url: urlForImage(image).url(),
+              alt:
+                image.alt?.trim() ||
+                `Play Like Kids — hero frame ${index + 1}`,
             };
           } catch {
             return null;

@@ -25,20 +25,22 @@ export function NumberedListHeading({
   number = "00",
   label = "Directors",
   className = "",
+  as: Tag = "h1",
 }: {
   number?: string;
   label?: string;
   className?: string;
+  as?: "h1" | "h2";
 }) {
   return (
-    <p
+    <Tag
       className={`${numberedListIndentClassName} ${numberedListTypeClassName} ${className}`}
     >
       <span className={`${numberedListRowClassName} font-black`}>
         <span className="tabular-nums">{number}</span>
         <span>{label}</span>
       </span>
-    </p>
+    </Tag>
   );
 }
 export function NumberedList({
