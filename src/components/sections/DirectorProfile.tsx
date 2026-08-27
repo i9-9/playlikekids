@@ -124,7 +124,7 @@ export function DirectorProfile({
         ) : null}
       </motion.div>
 
-      <div className="director-profile-player min-h-0 min-w-0">
+      <div className="director-profile-player min-w-0 md:min-h-0">
         {media}
       </div>
     </>

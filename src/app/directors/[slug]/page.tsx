@@ -80,7 +80,7 @@ export default async function DirectorPage({ params }: DirectorPageProps) {
   }));
 
   return (
-    <main className="director-profile-page director-profile-grid h-full min-h-0 flex-1 overflow-y-auto pt-8 md:overflow-hidden md:pt-12">
+    <main className="director-profile-page director-profile-grid pt-8 pb-4 md:h-full md:min-h-0 md:flex-1 md:overflow-hidden md:pb-0 md:pt-12">
       <NumberedListHeading
         as="h2"
         className="director-profile-heading shrink-0"
@@ -98,7 +98,7 @@ export default async function DirectorPage({ params }: DirectorPageProps) {
         <NumberedList
           items={navItems}
           activeHref={`/directors/${director.slug}`}
-          className="director-profile-nav relative z-10 shrink-0 pt-[var(--profile-list-gap)]"
+          className="director-profile-nav relative shrink-0 pt-[var(--profile-list-gap)] md:z-10"
         />
       </div>
     </main>

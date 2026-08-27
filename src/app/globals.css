@@ -98,7 +98,13 @@
 .director-profile-stack {
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  flex-shrink: 0;
+}
+
+.director-profile-credits,
+.director-profile-player,
+.director-profile-nav {
+  flex-shrink: 0;
 }
 
 .director-profile-credits {
