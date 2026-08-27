@@ -30,6 +30,32 @@ export const credit = defineType({
       description:
         "Only for unlisted videos. From the share URL after the ID (vimeo.com/ID/HASH).",
     }),
+    defineField({
+      name: "festival",
+      title: "Festival",
+      type: "object",
+      description: "Optional laurel — shown on the director profile (e.g. Sundance).",
+      fields: [
+        defineField({
+          name: "name",
+          title: "Festival name",
+          type: "string",
+          validation: (rule) => rule.required(),
+        }),
+        defineField({
+          name: "year",
+          title: "Year",
+          type: "string",
+          validation: (rule) => rule.required(),
+        }),
+        defineField({
+          name: "selection",
+          title: "Selection",
+          type: "string",
+          initialValue: "Official Selection",
+        }),
+      ],
+    }),
   ],
   preview: {
     select: {

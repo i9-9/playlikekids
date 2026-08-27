@@ -14,6 +14,11 @@ type DirectorDocument = Omit<Director, "previewImageUrl" | "credits"> & {
     project: string;
     vimeoId?: string | null;
     vimeoHash?: string | null;
+    festival?: {
+      name?: string | null;
+      year?: string | null;
+      selection?: string | null;
+    } | null;
   }> | null;
 };
 
@@ -38,6 +43,14 @@ function toDirector(doc: DirectorDocument): Director {
       project: credit.project,
       vimeoId: credit.vimeoId ?? null,
       vimeoHash: credit.vimeoHash ?? null,
+      festival:
+        credit.festival?.name && credit.festival?.year
+          ? {
+              name: credit.festival.name,
+              year: credit.festival.year,
+              selection: credit.festival.selection?.trim() || "Official Selection",
+            }
+          : null,
     })),
     previewImageUrl,
   };
@@ -48,7 +61,7 @@ const directorsProjection = /* groq */ `{
   name,
   "slug": slug.current,
   order,
-  credits[]{ brand, project, vimeoId, vimeoHash },
+  credits[]{ brand, project, vimeoId, vimeoHash, festival },
   previewImage
 }`;
 

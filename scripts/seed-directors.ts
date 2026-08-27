@@ -49,6 +49,7 @@ async function main() {
         project: credit.project,
         vimeoId: credit.vimeoId ?? undefined,
         vimeoHash: credit.vimeoHash ?? undefined,
+        festival: credit.festival ?? undefined,
       })),
     });
     console.log(`Upserted director: ${director.name}`);

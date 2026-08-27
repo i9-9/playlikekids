@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { PlayMark } from "@/components/ui/PlayMark";
 import { toVimeoEmbedUrl } from "@/lib/vimeo/thumbnail";
 
@@ -28,6 +28,8 @@ type AspectMediaVimeo = {
 export type AspectMediaProps = (AspectMediaImage | AspectMediaVimeo) & {
   className?: string;
   aspectClassName?: string;
+  /** Poster overlay (hidden while a Vimeo player is running). */
+  overlay?: ReactNode;
 };
 
 /**
@@ -49,6 +51,7 @@ export function AspectMedia(props: AspectMediaProps) {
           priority={props.priority}
           className="object-cover"
         />
+        {props.overlay}
       </div>
     );
   }
@@ -61,6 +64,7 @@ export function AspectMedia(props: AspectMediaProps) {
       title={props.title}
       autoplay={props.autoplay}
       playable={props.playable}
+      overlay={props.overlay}
       frameClassName={frameClassName}
     />
   );
@@ -73,6 +77,7 @@ function VimeoFrame({
   title,
   autoplay = false,
   playable = false,
+  overlay,
   frameClassName,
 }: {
   videoId: string;
@@ -81,6 +86,7 @@ function VimeoFrame({
   title?: string;
   autoplay?: boolean;
   playable?: boolean;
+  overlay?: ReactNode;
   frameClassName: string;
 }) {
   const reduced = useReducedMotion();
@@ -147,6 +153,7 @@ function VimeoFrame({
               }`}
             />
           ) : null}
+          {overlay}
         </motion.div>
       ) : null}
     </AnimatePresence>

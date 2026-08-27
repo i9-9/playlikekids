@@ -20,6 +20,8 @@ export function SiteHeader({
       </p>
       <a
         href="mailto:hello@playlikekids.tv"
+        target="_blank"
+        rel="noopener noreferrer"
         className="block shrink-0 lowercase tracking-wide"
       >
         hello@playlikekids.tv

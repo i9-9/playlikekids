@@ -32,6 +32,8 @@ export function UnderConstruction() {
         >
           <a
             href="mailto:hello@playlikekids.tv"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-[clamp(1rem,2.4vw,1.2rem)] tracking-[0.08em] text-foreground transition-opacity hover:opacity-60"
             style={{ fontWeight: 700 }}
           >

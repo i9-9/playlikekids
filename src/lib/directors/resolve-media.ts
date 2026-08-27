@@ -2,7 +2,7 @@ import {
   extractVimeoId,
   getVimeoThumbnail,
 } from "@/lib/vimeo/thumbnail";
-import type { Credit, Director } from "@/lib/sanity/types";
+import type { Credit, Director, FestivalSelection } from "@/lib/sanity/types";
 import type { DirectorCardData } from "@/components/sections/DirectorCard";
 
 export type ResolvedFilm = Credit & {
@@ -26,6 +26,28 @@ function localDirectorImage(slug: string): string | null {
   return LOCAL_DIRECTOR_IMAGES[slug] ?? null;
 }
 
+/** Live CMS docs may not have festival fields yet. Used for credit labels, not laurels. */
+const FESTIVAL_FALLBACK: Record<string, Record<string, FestivalSelection>> = {
+  "gabriela-ortega": {
+    Huella: {
+      name: "Sundance Film Festival",
+      year: "2023",
+      selection: "Official Selection",
+    },
+    "Marga en el DF": {
+      name: "Sundance Film Festival",
+      year: "2026",
+      selection: "Official Selection",
+    },
+  },
+};
+
+function withFestival(director: Director, credit: Credit): Credit {
+  if (credit.festival?.name) return credit;
+  const fallback = FESTIVAL_FALLBACK[director.slug]?.[credit.brand] ?? null;
+  return { ...credit, festival: fallback };
+}
+
 async function resolveFilm(credit: Credit): Promise<ResolvedFilm> {
   const videoId = credit.vimeoId ? extractVimeoId(credit.vimeoId) : null;
   if (!videoId) {
@@ -43,7 +65,9 @@ async function resolveFilm(credit: Credit): Promise<ResolvedFilm> {
 export async function resolveDirectorFilms(
   director: Director,
 ): Promise<ResolvedFilm[]> {
-  return Promise.all(director.credits.map(resolveFilm));
+  return Promise.all(
+    director.credits.map((credit) => resolveFilm(withFestival(director, credit))),
+  );
 }
 
 export function toDirectorCards(directors: Director[]): DirectorCardData[] {

@@ -1,5 +1,13 @@
 /** Shared domain types for Sanity content. No `any`. */
 
+export type FestivalSelection = {
+  name: string;
+  year: string;
+  selection: string;
+  /** Official festival laurel artwork. Defaults to the Sundance Official Selection mark. */
+  laurelSrc?: string | null;
+};
+
 export type Credit = {
   brand: string;
   project: string;
@@ -7,6 +15,7 @@ export type Credit = {
   vimeoId: string | null;
   /** Privacy hash for unlisted videos (embed `?h=`). */
   vimeoHash: string | null;
+  festival: FestivalSelection | null;
 };
 
 export type SanityImage = {

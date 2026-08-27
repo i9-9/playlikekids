@@ -41,6 +41,11 @@ export function DirectorProfile({
     ease: [0.76, 0, 0.24, 1] as const,
   };
 
+  const selectFilm = (index: number, play: boolean) => {
+    setActiveIndex(index);
+    setPlaying(play);
+  };
+
   const media =
     thumbnailUrl && videoId ? (
       <AspectMedia
@@ -83,41 +88,40 @@ export function DirectorProfile({
         animate={{ opacity: 1 }}
         transition={fadeTransition}
       >
-        <h1 className="min-w-0 pr-[20%] text-right font-roboto text-director-name font-normal uppercase leading-none tracking-normal md:w-[var(--list-indent)] md:pr-0">
+        <h1 className="min-w-0 w-full text-center font-roboto text-director-name font-medium uppercase leading-none tracking-normal md:w-[var(--list-indent)] md:text-right md:font-normal">
           {director.name}
         </h1>
-        <ul className="flex w-1/2 flex-col items-end gap-[var(--credit-row-gap)] self-start font-roboto text-credit font-medium uppercase leading-none tracking-[0.2em] md:w-[var(--axis-credits-box)] md:self-auto">
-          {films.map((film, index) => {
-            const selected = index === activeIndex;
-            const canPlay = Boolean(film.videoId);
+        {films.length > 0 ? (
+          <ul className="flex w-full flex-col items-end gap-[var(--credit-row-gap)] font-roboto text-credit font-medium uppercase leading-none tracking-[0.2em] md:w-[var(--axis-credits-box)]">
+            {films.map((film, index) => {
+              const selected = index === activeIndex;
+              const canPlay = Boolean(film.videoId);
 
-            return (
-              <li key={`${film.brand}-${film.project}-${index}`}>
-                {canPlay ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveIndex(index);
-                      setPlaying(true);
-                    }}
-                    aria-pressed={selected}
-                    className={`text-right uppercase tracking-[0.2em] transition-colors duration-200 ease-[cubic-bezier(0.76,0,0.24,1)] motion-reduce:duration-0 ${
-                      selected
-                        ? "text-foreground"
-                        : "text-foreground/45 hover:text-foreground"
-                    }`}
-                  >
-                    <CreditLabel credit={film} />
-                  </button>
-                ) : (
-                  <span className="text-right">
-                    <CreditLabel credit={film} />
-                  </span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+              return (
+                <li key={`${film.brand}-${film.project}-${index}`}>
+                  {canPlay ? (
+                    <button
+                      type="button"
+                      onClick={() => selectFilm(index, true)}
+                      aria-pressed={selected}
+                      className={`text-right uppercase tracking-[0.2em] transition-[color,font-weight] duration-200 ease-[cubic-bezier(0.76,0,0.24,1)] motion-reduce:duration-0 ${
+                        selected
+                          ? "font-bold text-foreground"
+                          : "font-medium text-foreground/45 hover:text-foreground"
+                      }`}
+                    >
+                      <CreditLabel credit={film} showFestival />
+                    </button>
+                  ) : (
+                    <span className="text-right">
+                      <CreditLabel credit={film} showFestival />
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
       </motion.div>
 
       <div className="director-profile-player min-h-0 min-w-0">
