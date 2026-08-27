@@ -48,7 +48,7 @@ export function SiteFooter({
   return (
     <footer
       ref={footerRef}
-      className={`relative grid w-full grid-cols-2 items-center gap-3 bg-transparent md:grid-cols-[1fr_auto_1fr] md:gap-4 ${underlay ? "z-0 max-md:z-20 md:pointer-events-none" : "z-20"} ${className}`}
+      className={`relative grid w-full grid-cols-2 items-center gap-3 bg-transparent pt-5 md:grid-cols-[1fr_auto_1fr] md:gap-4 md:pt-4 ${underlay ? "z-0 max-md:z-20 md:pointer-events-none" : "z-20"} ${className}`}
     >
       <PageTransitionWipe
         active={isWiping}
