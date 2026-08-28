@@ -1,0 +1,187 @@
+[
+  {
+    "director": "01-davide-vicari",
+    "piece": "ministry-of-sports-ksa",
+    "title": "Ministry of Sports - Kindom of Saudi Arabia",
+    "src": [
+      1280,
+      720
+    ],
+    "max": [
+      1280,
+      720
+    ],
+    "times": [
+      8,
+      19,
+      43,
+      54
+    ]
+  },
+  {
+    "director": "01-davide-vicari",
+    "piece": "lamborghini-the-barber",
+    "title": "Lamborghini - The Barber",
+    "src": [
+      1366,
+      534
+    ],
+    "max": [
+      1366,
+      534
+    ],
+    "times": [
+      12,
+      32,
+      51,
+      89
+    ]
+  },
+  {
+    "director": "02-gabriela-ortega",
+    "piece": "marga-en-el-df",
+    "title": "Marga en el DF - Trailer",
+    "src": [
+      1920,
+      1080
+    ],
+    "max": [
+      1920,
+      1080
+    ],
+    "times": [
+      75,
+      225,
+      576,
+      752,
+      927
+    ]
+  },
+  {
+    "director": "02-gabriela-ortega",
+    "piece": "huella",
+    "title": "Huella- Teaser",
+    "src": [
+      1920,
+      1080
+    ],
+    "max": [
+      1920,
+      1080
+    ],
+    "times": [
+      8,
+      13
+    ]
+  },
+  {
+    "director": "03-mar-del-corral",
+    "piece": "reebok-lola-indigo",
+    "title": "Reebok - Lola Indigo",
+    "src": [
+      1920,
+      1080
+    ],
+    "max": [
+      1920,
+      1080
+    ],
+    "times": [
+      8,
+      12,
+      15
+    ]
+  },
+  {
+    "director": "03-mar-del-corral",
+    "piece": "grey-goose-idris-elba",
+    "title": "Grey Goose - Idris Elba",
+    "src": [
+      1280,
+      720
+    ],
+    "max": [
+      1280,
+      720
+    ],
+    "times": [
+      12,
+      20,
+      35
+    ]
+  },
+  {
+    "director": "04-matias-malet",
+    "piece": "bravas",
+    "title": "FIFA BRAVAS TRAILER",
+    "src": [
+      1920,
+      1080
+    ],
+    "max": [
+      1920,
+      1080
+    ],
+    "times": [
+      8,
+      20,
+      45
+    ]
+  },
+  {
+    "director": "04-matias-malet",
+    "piece": "no-corre-el-viento",
+    "title": "MATIAS - No corre el viento - TRAILER",
+    "src": [
+      1920,
+      1080
+    ],
+    "max": [
+      1920,
+      1080
+    ],
+    "times": [
+      9,
+      23,
+      65
+    ]
+  },
+  {
+    "director": "05-sage-bennett",
+    "piece": "placebo",
+    "title": "Placebo - Trailer",
+    "src": [
+      3072,
+      1878
+    ],
+    "max": [
+      3072,
+      1878
+    ],
+    "times": [
+      10,
+      22,
+      33,
+      42
+    ]
+  },
+  {
+    "director": "05-sage-bennett",
+    "piece": "dior",
+    "title": "Dior - Mothers Day 2025",
+    "src": [
+      1920,
+      1080
+    ],
+    "max": [
+      1920,
+      1080
+    ],
+    "times": [
+      5,
+      12,
+      28,
+      35
+    ]
+  }
+]

@@ -126,7 +126,7 @@
     --axis-credits-box: calc(var(--axis-credits) - var(--page-gutter));
     --profile-name-top: 8.906vw;
     --profile-player-top: 1.25rem;
-    --credit-row-gap: 2.6vw;
+    --credit-row-gap: 1.3vw;
     --credit-name-gap: var(--credit-row-gap);
     --profile-list-gap: 3.2vw;
   }
