@@ -4,8 +4,11 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 import { AspectMedia } from "@/components/ui/AspectMedia";
 import { CreditLabel } from "@/components/ui/CreditLabel";
+import { SundanceLockup } from "@/components/ui/SundanceLockup";
 import { formatCreditLabel } from "@/lib/credits";
 import type { ResolvedFilm } from "@/lib/directors/resolve-media";
+
+const SUNDANCE_DIRECTOR_SLUG = "gabriela-ortega";
 
 export type DirectorProfileData = {
   slug: string;
@@ -40,6 +43,8 @@ export function DirectorProfile({
     duration: fadeDuration,
     ease: [0.76, 0, 0.24, 1] as const,
   };
+  const overlay =
+    director.slug === SUNDANCE_DIRECTOR_SLUG ? <SundanceLockup /> : null;
 
   const media =
     thumbnailUrl && videoId ? (
@@ -51,6 +56,7 @@ export function DirectorProfile({
         title={title}
         autoplay={playing}
         playable
+        overlay={overlay}
       />
     ) : thumbnailUrl ? (
       <AnimatePresence mode="sync" initial={false}>
@@ -67,6 +73,7 @@ export function DirectorProfile({
             src={thumbnailUrl}
             alt={director.name}
             priority
+            overlay={overlay}
           />
         </motion.div>
       </AnimatePresence>
