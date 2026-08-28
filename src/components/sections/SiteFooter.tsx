@@ -31,7 +31,7 @@ export function SiteFooter({
   underlay = false,
 }: SiteFooterProps) {
   const footerRef = useRef<HTMLElement>(null);
-  const { startWipe, isWiping, skipBand, bandDurationMs, riseDurationMs } =
+  const { startWipe, isWiping, skipBand, anchor, bandDurationMs, riseDurationMs } =
     usePageTransition();
   // Hero starts light; while the white wipe runs behind them, flip to dark.
   const onDarkSurface = tone === "light" && !isWiping;
@@ -40,9 +40,22 @@ export function SiteFooter({
 
   const handleDirectorsClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (!wipeToDirectors) return;
+    if (
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      event.button !== 0
+    ) {
+      return;
+    }
     event.preventDefault();
     if (isWiping) return;
-    startWipe({ href: "/directors", skipBand: wipeSkipBand });
+    startWipe({
+      href: "/directors",
+      skipBand: wipeSkipBand,
+      anchor: { kind: "footer", ref: footerRef },
+    });
   };
 
   return (
@@ -55,7 +68,7 @@ export function SiteFooter({
         skipBand={skipBand}
         bandDurationMs={bandDurationMs}
         riseDurationMs={riseDurationMs}
-        anchorRef={footerRef}
+        anchor={anchor}
       />
 
       <Link

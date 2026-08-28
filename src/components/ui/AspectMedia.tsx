@@ -28,7 +28,7 @@ type AspectMediaVimeo = {
 export type AspectMediaProps = (AspectMediaImage | AspectMediaVimeo) & {
   className?: string;
   aspectClassName?: string;
-  /** Poster overlay (hidden while a Vimeo player is running). */
+  /** Drawn on the poster, inside the 16:9 frame. Hidden once playback starts. */
   overlay?: ReactNode;
 };
 
