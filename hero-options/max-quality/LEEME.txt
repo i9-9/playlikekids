@@ -1,9 +1,0 @@
-STILLS EN MÁXIMA CALIDAD NATIVA
-================================
-Extraídos del stream HLS más alto que Vimeo sirve para cada pieza.
-No hay upscale: si el archivo no es 4K, es porque en Vimeo no está subido a 4K.
-
-Placebo es el único con ladder 2160p (3072x1878, ~4K).
-El resto: 1080p (1920x1080) o 720p.
-
-PNG = píxeles nativos, sin recomprimir.

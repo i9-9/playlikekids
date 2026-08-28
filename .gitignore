@@ -20,6 +20,9 @@
 # production
 /build
 
+# local frame dumps / hero stills — not for GitHub
+/hero-options
+
 # misc
 .DS_Store
 *.pem
