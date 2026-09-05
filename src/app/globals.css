@@ -73,26 +73,84 @@
   }
 }
 
-/* Profile-only axes from the 1920×1080 artboard */
+/* Profile-only type and vertical rhythm — list X lives on .directors-roster */
 .director-profile-page {
   --text-director-name: clamp(1.5rem, 5.6vw, 1.75rem);
-  --axis-num: 22.104vw;
-  --axis-credits: 29.948vw;
-  --axis-names: 34.01vw;
   --profile-name-top: 1.75rem;
   --profile-player-top: 2.25rem;
   --profile-list-gap: 2.75rem;
   --credit-row-gap: 0.875rem;
   --credit-name-gap: 1.5rem;
-  /* Mobile: 00 / 01 sit left; DIRECTORS and names share a column near center */
+}
+
+/* Shared roster axes — same X for 00 / names on index and profile */
+.directors-roster {
+  --axis-num: 22.104vw;
+  --axis-credits: 29.948vw;
+  --axis-names: 34.01vw;
   --list-num: 1.75rem;
   --list-indent: calc(18vw - var(--page-gutter));
   --list-gap: calc(45vw - 18vw - var(--list-num));
+  --list-names-inset: calc(var(--list-indent) + var(--list-num) + var(--list-gap));
+  --roster-end: 0;
+  --roster-gap: 0px;
+  --roster-list-pad: 0px;
+  --roster-ease: cubic-bezier(0.76, 0, 0.24, 1);
+  display: flex;
+  min-height: 0;
+  flex: 1 1 0%;
+  flex-direction: column;
+  gap: var(--roster-gap);
+  padding-bottom: var(--footer-lockup);
+  transition:
+    gap 0.5s var(--roster-ease),
+    padding 0.5s var(--roster-ease);
 }
 
-.director-profile-grid {
-  display: flex;
-  flex-direction: column;
+.directors-roster-end {
+  min-height: 0;
+  flex: var(--roster-end) 1 0%;
+  transition: flex-grow 0.5s var(--roster-ease);
+}
+
+.directors-roster-heading,
+.directors-roster-list {
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.directors-roster-list {
+  padding-top: var(--roster-list-pad);
+  transition: padding-top 0.5s var(--roster-ease);
+}
+
+.directors-roster-middle {
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.directors-roster-slot {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.directors-roster-slot-body {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.directors-roster--index {
+  --roster-end: 1;
+  --roster-gap: 3rem;
+  --roster-list-pad: 0px;
+  padding-top: 1.5rem;
+}
+
+.directors-roster--profile {
+  --roster-end: 0;
+  --roster-gap: 0px;
+  --roster-list-pad: var(--profile-list-gap);
+  padding-top: 2rem;
 }
 
 .director-profile-stack {
@@ -116,12 +174,24 @@
 }
 
 @media (min-width: 768px) {
-  .director-profile-page {
-    --text-director-name: clamp(1.5rem, 2vw, 2.25rem);
+  .directors-roster {
     --list-num: 1.5rem;
     --list-indent: calc(var(--axis-num) - var(--page-gutter));
     --list-gap: calc(var(--axis-names) - var(--axis-num) - var(--list-num));
     --list-names-inset: calc(var(--axis-names) - var(--page-gutter));
+  }
+
+  .directors-roster--index {
+    padding-top: 3.5rem;
+    padding-bottom: 0;
+  }
+
+  .directors-roster--profile {
+    padding-top: 3rem;
+  }
+
+  .director-profile-page {
+    --text-director-name: clamp(1.5rem, 2vw, 2.25rem);
     --axis-name-box: calc(var(--axis-num) + var(--list-num) - var(--page-gutter));
     --axis-credits-box: calc(var(--axis-credits) - var(--page-gutter));
     --profile-name-top: 8.906vw;
@@ -131,51 +201,23 @@
     --profile-list-gap: 3.2vw;
   }
 
-  /*
-    Shared columns with the numbered roster:
-    [indent | numbers | gap | names + player]
-  */
-  .director-profile-grid {
+  .director-profile-stack {
     display: grid;
     grid-template-columns:
       var(--list-indent)
       var(--list-num)
       var(--list-gap)
       minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    column-gap: 0;
-  }
-
-  .director-profile-stack {
-    display: contents;
-  }
-
-  .director-profile-heading,
-  .director-profile-nav {
-    grid-column: 1 / -1;
   }
 
   .director-profile-credits {
     grid-column: 1 / 4;
-    grid-row: 2;
     align-self: start;
   }
 
   .director-profile-player {
     grid-column: 4;
-    grid-row: 2;
     min-width: 0;
-    min-height: 0;
-    height: 100%;
-    overflow: hidden;
-    container-type: size;
-  }
-
-  /* Fit 16:9 inside the remaining row — shrink width if height is the limiter. */
-  .director-profile-player > * {
-    width: min(100%, calc(100cqh * 16 / 9));
-    max-height: 100%;
-    height: auto;
   }
 }
 
@@ -230,6 +272,46 @@
   /* Pull Druk caps up so their ink sits on the same row as the footer logo. */
   .wordmark-lockup {
     translate: 0 calc(var(--druk-directors-ink-top) * -1em);
+  }
+}
+
+.player-volume {
+  appearance: none;
+  background: transparent;
+}
+
+.player-volume::-webkit-slider-runnable-track {
+  height: 2px;
+  background: rgb(255 255 255 / 0.35);
+  border-radius: 999px;
+}
+
+.player-volume::-webkit-slider-thumb {
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  margin-top: -4px;
+  border-radius: 999px;
+  background: #fff;
+}
+
+.player-volume::-moz-range-track {
+  height: 2px;
+  background: rgb(255 255 255 / 0.35);
+  border-radius: 999px;
+}
+
+.player-volume::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+}
+
+@keyframes player-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 

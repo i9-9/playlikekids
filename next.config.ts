@@ -21,7 +21,7 @@ const contentSecurityPolicy = [
   "img-src 'self' data: blob: https://cdn.sanity.io https://i.vimeocdn.com https://vumbnail.com",
   "font-src 'self'",
   "frame-src https://player.vimeo.com",
-  "connect-src 'self' https://*.sanity.io https://cdn.sanity.io https://vimeo.com",
+  "connect-src 'self' https://*.sanity.io https://cdn.sanity.io https://vimeo.com https://player.vimeo.com",
   "media-src 'self' https://player.vimeo.com",
   "object-src 'none'",
   "base-uri 'self'",
@@ -31,6 +31,7 @@ const contentSecurityPolicy = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   poweredByHeader: false,
   images: {
     remotePatterns: [

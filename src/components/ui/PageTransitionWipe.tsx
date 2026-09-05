@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { motion, useMotionValue, type MotionValue } from "motion/react";
 import {
   createContext,
   useCallback,
@@ -28,6 +28,13 @@ export type WipeOptions = {
   riseDurationMs?: number;
 };
 
+export type WipeRect = {
+  top: number;
+  left: number;
+  right: number;
+  bottom: number;
+};
+
 type PageTransitionContextValue = {
   startWipe: (options: WipeOptions) => void;
   isWiping: boolean;
@@ -35,7 +42,13 @@ type PageTransitionContextValue = {
   anchor: TransitionAnchor | null;
   bandDurationMs: number;
   riseDurationMs: number;
+  /** 0 → 1 with the left-to-right band. Stays at 1 during the rise. */
+  wipeProgress: MotionValue<number>;
+  /** Viewport box of the white cover (band + rise). */
+  wipeRect: MotionValue<WipeRect>;
 };
+
+const EMPTY_WIPE_RECT: WipeRect = { top: 0, left: 0, right: 0, bottom: 0 };
 
 const PageTransitionContext = createContext<PageTransitionContextValue | null>(
   null,
@@ -43,8 +56,7 @@ const PageTransitionContext = createContext<PageTransitionContextValue | null>(
 
 export const BAND_DURATION_MS = 700;
 export const RISE_DURATION_MS = 650;
-/** Shorter rise for /directors → profile (internal navigation). */
-export const DIRECTOR_RISE_DURATION_MS = 450;
+export const WIPE_EASE: [number, number, number, number] = [0.76, 0, 0.24, 1];
 
 type PageTransitionProviderProps = {
   children: ReactNode;
@@ -101,6 +113,8 @@ export function PageTransitionProvider({
   const [skipBand, setSkipBand] = useState(false);
   const [anchor, setAnchor] = useState<TransitionAnchor | null>(null);
   const [riseDurationMs, setRiseDurationMs] = useState(RISE_DURATION_MS);
+  const wipeProgress = useMotionValue(0);
+  const wipeRect = useMotionValue<WipeRect>(EMPTY_WIPE_RECT);
   const destinationRef = useRef<string | null>(null);
   const didPushRef = useRef(false);
 
@@ -114,6 +128,7 @@ export function PageTransitionProvider({
       if (isWiping) return;
       destinationRef.current = href;
       didPushRef.current = false;
+      wipeProgress.set(nextSkipBand ? 1 : 0);
       setSkipBand(nextSkipBand);
       setAnchor(nextAnchor);
       setRiseDurationMs(nextRiseDurationMs);
@@ -122,6 +137,17 @@ export function PageTransitionProvider({
     },
     [isWiping, router],
   );
+
+  useEffect(() => {
+    if (!isWiping) {
+      wipeProgress.set(0);
+      wipeRect.set(EMPTY_WIPE_RECT);
+      return;
+    }
+    if (skipBand) {
+      wipeProgress.set(1);
+    }
+  }, [isWiping, skipBand, wipeProgress, wipeRect]);
 
   useEffect(() => {
     if (!isWiping) return;
@@ -190,8 +216,10 @@ export function PageTransitionProvider({
       anchor,
       bandDurationMs: skipBand ? 0 : BAND_DURATION_MS,
       riseDurationMs,
+      wipeProgress,
+      wipeRect,
     }),
-    [isWiping, skipBand, anchor, riseDurationMs, startWipe],
+    [isWiping, skipBand, anchor, riseDurationMs, startWipe, wipeProgress, wipeRect],
   );
 
   return (
@@ -236,6 +264,8 @@ export function PageTransitionWipe({
   anchor,
   className = "",
 }: PageTransitionWipeProps) {
+  const { wipeProgress, wipeRect } = usePageTransition();
+  const wipeRef = useRef<HTMLDivElement>(null);
   const [phase, setPhase] = useState<WipePhase>("band");
   const [bandTop, setBandTop] = useState(0);
   const [bandHeight, setBandHeight] = useState(0);
@@ -285,10 +315,33 @@ export function PageTransitionWipe({
 
   const isRise = phase === "rise";
 
+  useEffect(() => {
+    if (!active) return;
+
+    let frame = 0;
+    const publish = () => {
+      const el = wipeRef.current;
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        wipeRect.set({
+          top: rect.top,
+          left: rect.left,
+          right: rect.right,
+          bottom: rect.bottom,
+        });
+      }
+      frame = window.requestAnimationFrame(publish);
+    };
+
+    frame = window.requestAnimationFrame(publish);
+    return () => window.cancelAnimationFrame(frame);
+  }, [active, wipeRect]);
+
   if (!active || !anchor || bandHeight <= 0) return null;
 
   return (
     <motion.div
+      ref={wipeRef}
       className={`pointer-events-none fixed left-0 z-0 bg-wipe ${className}`}
       style={{
         width: "100vw",
@@ -319,18 +372,23 @@ export function PageTransitionWipe({
         isRise
           ? {
               duration: riseDurationMs / 1000,
-              ease: [0.76, 0, 0.24, 1],
+              ease: WIPE_EASE,
             }
           : {
               scaleX: {
                 duration: bandDurationMs / 1000,
-                ease: [0.76, 0, 0.24, 1],
+                ease: WIPE_EASE,
               },
               top: { duration: 0 },
               height: { duration: 0 },
               scaleY: { duration: 0 },
             }
       }
+      onUpdate={(latest) => {
+        if (typeof latest.scaleX === "number") {
+          wipeProgress.set(latest.scaleX);
+        }
+      }}
       aria-hidden="true"
     />
   );

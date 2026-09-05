@@ -1,11 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, type MouseEvent } from "react";
 import { AspectMedia } from "@/components/ui/AspectMedia";
 import { CreditLabel } from "@/components/ui/CreditLabel";
 import { PlayMark } from "@/components/ui/PlayMark";
-import { useDirectorTransition } from "@/hooks/useDirectorTransition";
 import type { Credit } from "@/lib/sanity/types";
 
 export type DirectorCardData = {
@@ -23,23 +21,13 @@ type DirectorCardProps = {
 };
 
 export function DirectorCard({ director, className = "" }: DirectorCardProps) {
-  const posterRef = useRef<HTMLDivElement>(null);
-  const { navigateToDirector } = useDirectorTransition();
   const primaryCredit = director.credits[0];
   const href = `/directors/${director.slug}`;
 
-  const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
-    navigateToDirector(event, href, posterRef.current);
-  };
-
   return (
     <article className={`min-w-0 ${className}`}>
-      <Link
-        href={href}
-        onClick={handleClick}
-        className="link-poster group flex flex-col gap-2"
-      >
-        <div ref={posterRef} className="relative">
+      <Link href={href} scroll={false} className="link-poster group flex flex-col gap-2">
+        <div className="relative">
           {director.thumbnailUrl ? (
             <AspectMedia
               kind="image"

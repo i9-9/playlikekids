@@ -81,6 +81,13 @@ export const SEED_DIRECTORS: Omit<Director, "_id">[] = [
           selection: "Official Selection",
         },
       },
+      {
+        brand: "Coca-Cola",
+        project: "Gran Comida",
+        vimeoId: "1220263202",
+        vimeoHash: null,
+        festival: null,
+      },
     ],
   },
   {

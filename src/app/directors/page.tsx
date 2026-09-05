@@ -37,11 +37,7 @@ export const metadata: Metadata = {
 
 export default async function DirectorsPage() {
   const directors = await getAllDirectors();
-  const cards = toDirectorCards(directors);
+  const cards = await toDirectorCards(directors);
 
-  return (
-    <main className="flex min-h-0 flex-1 flex-col">
-      <DirectorsGrid directors={cards} />
-    </main>
-  );
+  return <DirectorsGrid directors={cards} />;
 }

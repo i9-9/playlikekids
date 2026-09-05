@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRef, type MouseEvent, type ReactNode } from "react";
 import { Logo } from "@/components/ui/Logo";
+import { ProgressiveInvert } from "@/components/ui/ProgressiveInvert";
 import { Wordmark } from "@/components/ui/Wordmark";
 import {
   PageTransitionWipe,
@@ -33,8 +34,7 @@ export function SiteFooter({
   const footerRef = useRef<HTMLElement>(null);
   const { startWipe, isWiping, skipBand, anchor, bandDurationMs, riseDurationMs } =
     usePageTransition();
-  // Hero starts light; while the white wipe runs behind them, flip to dark.
-  const onDarkSurface = tone === "light" && !isWiping;
+  const onDarkSurface = tone === "light";
   const logoVariant = onDarkSurface ? "white" : "black";
   const wordmarkColor = onDarkSurface ? "text-background" : "text-foreground";
 
@@ -76,9 +76,12 @@ export function SiteFooter({
         aria-label="Play Like Kids home"
         className="link-logo relative z-30 min-w-0 justify-self-start pointer-events-auto"
       >
-        <Logo
-          variant={logoVariant}
-          className="h-lockup w-auto max-w-full"
+        <ProgressiveInvert
+          className="h-lockup"
+          light={
+            <Logo variant={logoVariant} className="h-lockup w-auto max-w-full" />
+          }
+          dark={<Logo variant="black" className="h-lockup w-auto max-w-full" />}
         />
       </Link>
 
@@ -92,11 +95,22 @@ export function SiteFooter({
 
       <Link
         href="/directors"
+        scroll={false}
         onClick={handleDirectorsClick}
         className={`link-wordmark relative z-30 flex h-lockup min-w-0 max-w-full items-start justify-self-end overflow-visible col-start-2 row-start-1 pointer-events-auto md:col-start-3 ${wordmarkColor}`}
         aria-label="Directors"
       >
-        <Wordmark size="footer" className="wordmark-lockup block text-right" />
+        <ProgressiveInvert
+          light={
+            <Wordmark size="footer" className="wordmark-lockup block text-right" />
+          }
+          dark={
+            <Wordmark
+              size="footer"
+              className="wordmark-lockup block text-right text-foreground"
+            />
+          }
+        />
       </Link>
     </footer>
   );

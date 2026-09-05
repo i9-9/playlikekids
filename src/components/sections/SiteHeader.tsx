@@ -1,3 +1,5 @@
+import { ProgressiveInvert } from "@/components/ui/ProgressiveInvert";
+
 type SiteHeaderProps = {
   className?: string;
   /** Inverse colors for dark hero surfaces. */
@@ -9,14 +11,22 @@ export function SiteHeader({
   tone = "dark",
 }: SiteHeaderProps) {
   const colorClass = tone === "light" ? "text-background" : "text-foreground";
+  const location = (
+    <>
+      <span className="block">Creative Production Company</span>
+      <span className="block">Mexico City</span>
+    </>
+  );
 
   return (
     <header
       className={`flex w-full items-start justify-between gap-6 font-roboto text-nav font-bold leading-none tracking-wide ${colorClass} ${className}`}
     >
       <p className="uppercase">
-        <span className="block">Creative Production Company</span>
-        <span className="block">Mexico City</span>
+        <ProgressiveInvert
+          light={<span>{location}</span>}
+          dark={<span className="text-foreground">{location}</span>}
+        />
       </p>
       <a
         href="mailto:hello@playlikekids.tv"
@@ -24,7 +34,12 @@ export function SiteHeader({
         rel="noopener noreferrer"
         className="block shrink-0 lowercase tracking-wide"
       >
-        hello@playlikekids.tv
+        <ProgressiveInvert
+          light={<span>hello@playlikekids.tv</span>}
+          dark={
+            <span className="text-foreground">hello@playlikekids.tv</span>
+          }
+        />
       </a>
     </header>
   );

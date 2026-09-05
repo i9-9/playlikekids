@@ -2,7 +2,12 @@ import {
   extractVimeoId,
   getVimeoThumbnail,
 } from "@/lib/vimeo/thumbnail";
-import type { Credit, Director, FestivalSelection } from "@/lib/sanity/types";
+import type {
+  Credit,
+  Director,
+  FestivalSelection,
+  HeroImage,
+} from "@/lib/sanity/types";
 import type { DirectorCardData } from "@/components/sections/DirectorCard";
 
 export type ResolvedFilm = Credit & {
@@ -11,8 +16,8 @@ export type ResolvedFilm = Credit & {
 };
 
 /**
- * Stills in `public/images-directors/` for the /directors grid.
- * Named by last name. Independent from Vimeo film posters.
+ * Local stills in `public/images-directors/` — fallback if a Vimeo poster
+ * cannot be resolved for the /directors grid.
  */
 const LOCAL_DIRECTOR_IMAGES: Record<string, string> = {
   "davide-vicari": "/images-directors/vicari.jpg",
@@ -62,6 +67,14 @@ async function resolveFilm(credit: Credit): Promise<ResolvedFilm> {
   };
 }
 
+async function resolveFirstFilm(
+  director: Director,
+): Promise<ResolvedFilm | null> {
+  const firstCredit = director.credits[0];
+  if (!firstCredit) return null;
+  return resolveFilm(firstCredit);
+}
+
 export async function resolveDirectorFilms(
   director: Director,
 ): Promise<ResolvedFilm[]> {
@@ -70,14 +83,45 @@ export async function resolveDirectorFilms(
   );
 }
 
-export function toDirectorCards(directors: Director[]): DirectorCardData[] {
-  return directors.map((director) => ({
-    name: director.name,
-    slug: director.slug,
-    order: director.order,
-    credits: director.credits,
-    videoId: null,
-    thumbnailUrl:
-      localDirectorImage(director.slug) ?? director.previewImageUrl,
-  }));
+/** Home hero: Vimeo poster of each director's first film, in roster order. */
+export async function resolveHomeHeroImages(
+  directors: Director[],
+): Promise<HeroImage[]> {
+  const frames = await Promise.all(
+    directors.map(async (director) => {
+      const film = await resolveFirstFilm(director);
+      if (!film?.thumbnailUrl) return null;
+
+      const title = [film.brand, film.project].filter(Boolean).join(" — ");
+
+      return {
+        url: film.thumbnailUrl,
+        alt: title ? `${director.name} — ${title}` : director.name,
+      };
+    }),
+  );
+
+  return frames.filter((frame): frame is HeroImage => Boolean(frame));
+}
+
+export async function toDirectorCards(
+  directors: Director[],
+): Promise<DirectorCardData[]> {
+  return Promise.all(
+    directors.map(async (director) => {
+      const film = await resolveFirstFilm(director);
+
+      return {
+        name: director.name,
+        slug: director.slug,
+        order: director.order,
+        credits: director.credits,
+        videoId: null,
+        thumbnailUrl:
+          film?.thumbnailUrl ??
+          localDirectorImage(director.slug) ??
+          director.previewImageUrl,
+      };
+    }),
+  );
 }

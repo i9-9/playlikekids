@@ -1,105 +1,119 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
+import { flushSync } from "react-dom";
 import { AspectMedia } from "@/components/ui/AspectMedia";
 import { CreditLabel } from "@/components/ui/CreditLabel";
 import { SundanceLockup } from "@/components/ui/SundanceLockup";
 import { formatCreditLabel } from "@/lib/credits";
 import type { ResolvedFilm } from "@/lib/directors/resolve-media";
 
-const SUNDANCE_DIRECTOR_SLUG = "gabriela-ortega";
-
 export type DirectorProfileData = {
   slug: string;
   name: string;
   films: ResolvedFilm[];
-  fallbackThumbnailUrl: string | null;
 };
 
 type DirectorProfileProps = {
   director: DirectorProfileData;
 };
 
-export function DirectorProfile({
-  director,
-}: DirectorProfileProps) {
+function filmOverlay(film: ResolvedFilm) {
+  return /sundance/i.test(film.festival?.name ?? "") ? (
+    <SundanceLockup />
+  ) : null;
+}
+
+function FilmTile({
+  directorName,
+  film,
+  onPlay,
+}: {
+  directorName: string;
+  film: ResolvedFilm;
+  onPlay?: () => void;
+}) {
+  const title = `${directorName} — ${formatCreditLabel(film)}`;
+  const overlay = filmOverlay(film);
+
+  const media = film.thumbnailUrl ? (
+    <AspectMedia
+      kind="image"
+      src={film.thumbnailUrl}
+      alt={title}
+      overlay={overlay}
+      sizes="(max-width: 768px) 100vw, 22vw"
+    />
+  ) : (
+    <div className="aspect-video w-full bg-foreground/10" aria-hidden />
+  );
+
+  const label = (
+    <p className="min-w-0 font-roboto text-credit font-medium uppercase leading-snug tracking-[0.2em]">
+      <CreditLabel credit={film} showFestival />
+    </p>
+  );
+
+  if (!onPlay) {
+    return (
+      <article className="flex min-w-0 flex-col gap-2">
+        {media}
+        {label}
+      </article>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onPlay}
+      className="group flex min-w-0 w-full flex-col gap-2 text-left"
+    >
+      {media}
+      {label}
+    </button>
+  );
+}
+
+export function DirectorProfile({ director }: DirectorProfileProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
-
-  const reduced = useReducedMotion();
-  const fadeDuration = reduced ? 0 : 0.28;
   const films = director.films;
   const active = films[activeIndex] ?? null;
-  const videoId = active?.videoId ?? null;
-  const thumbnailUrl =
-    active?.thumbnailUrl ?? director.fallbackThumbnailUrl;
-  const privacyHash = active?.vimeoHash ?? null;
+
+  const selectFilm = (index: number) => {
+    flushSync(() => {
+      setActiveIndex(index);
+      setPlaying(true);
+    });
+  };
+
   const title = active
     ? `${director.name} — ${formatCreditLabel(active)}`
     : director.name;
-  const posterKey = videoId ?? thumbnailUrl ?? "empty";
-  const fadeTransition = {
-    duration: fadeDuration,
-    ease: [0.76, 0, 0.24, 1] as const,
-  };
-  const overlay =
-    director.slug === SUNDANCE_DIRECTOR_SLUG ? <SundanceLockup /> : null;
-
-  const selectFilm = (index: number, play: boolean) => {
-    setActiveIndex(index);
-    setPlaying(play);
-  };
-
-  const media =
-    thumbnailUrl && videoId ? (
-      <AspectMedia
-        kind="vimeo"
-        videoId={videoId}
-        privacyHash={privacyHash}
-        thumbnailUrl={thumbnailUrl}
-        title={title}
-        autoplay={playing}
-        playable
-        overlay={overlay}
-      />
-    ) : thumbnailUrl ? (
-      <AnimatePresence mode="sync" initial={false}>
-        <motion.div
-          key={posterKey}
-          className="relative"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={fadeTransition}
-        >
-          <AspectMedia
-            kind="image"
-            src={thumbnailUrl}
-            alt={director.name}
-            priority
-            overlay={overlay}
-          />
-        </motion.div>
-      </AnimatePresence>
-    ) : (
-      <div className="aspect-video w-full bg-foreground/10" aria-hidden />
-    );
 
   return (
     <>
-      <motion.div
+      <div
         key={director.slug}
         className="director-profile-credits flex flex-col gap-[var(--credit-name-gap)]"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={fadeTransition}
       >
         <h1 className="min-w-0 w-full text-center font-roboto text-director-name font-medium uppercase leading-none tracking-normal md:w-[var(--list-indent)] md:text-right md:font-normal">
-          {director.name}
+          {playing ? (
+            <button
+              type="button"
+              onClick={() => setPlaying(false)}
+              className="w-full uppercase tracking-inherit transition-opacity duration-200 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-70 motion-reduce:duration-0"
+              aria-label={`Back to ${director.name} films`}
+            >
+              {director.name}
+            </button>
+          ) : (
+            director.name
+          )}
         </h1>
-        {films.length > 0 ? (
-          <ul className="flex w-full flex-col items-end gap-[var(--credit-row-gap)] font-roboto text-credit font-medium uppercase leading-none tracking-[0.2em] md:w-[var(--axis-credits-box)]">
+        {playing && films.length > 0 ? (
+          <ul className="flex w-full flex-col items-end gap-[var(--credit-row-gap)] font-roboto text-credit uppercase leading-none tracking-[0.2em] md:w-[var(--axis-credits-box)]">
             {films.map((film, index) => {
               const selected = index === activeIndex;
               const canPlay = Boolean(film.videoId);
@@ -109,18 +123,19 @@ export function DirectorProfile({
                   {canPlay ? (
                     <button
                       type="button"
-                      onClick={() => selectFilm(index, true)}
+                      onClick={() => selectFilm(index)}
+                      aria-current={selected ? "true" : undefined}
                       aria-pressed={selected}
-                      className={`text-right uppercase tracking-[0.2em] transition-[color,font-weight] duration-200 ease-[cubic-bezier(0.76,0,0.24,1)] motion-reduce:duration-0 ${
+                      className={`text-right uppercase tracking-[0.2em] transition-opacity duration-200 ease-[cubic-bezier(0.76,0,0.24,1)] motion-reduce:duration-0 ${
                         selected
-                          ? "font-bold text-foreground"
-                          : "font-medium text-foreground/45 hover:text-foreground"
+                          ? "font-black"
+                          : "font-medium opacity-45 hover:opacity-100"
                       }`}
                     >
                       <CreditLabel credit={film} showFestival />
                     </button>
                   ) : (
-                    <span className="text-right">
+                    <span className={`text-right ${selected ? "font-black" : "font-medium opacity-45"}`}>
                       <CreditLabel credit={film} showFestival />
                     </span>
                   )}
@@ -129,11 +144,40 @@ export function DirectorProfile({
             })}
           </ul>
         ) : null}
-      </motion.div>
-
-      <div className="director-profile-player min-w-0 md:min-h-0">
-        {media}
       </div>
+
+      {playing && active?.thumbnailUrl && active.videoId ? (
+        <div className="director-profile-player min-w-0">
+          <AspectMedia
+            key={active.videoId}
+            kind="vimeo"
+            videoId={active.videoId}
+            privacyHash={active.vimeoHash}
+            thumbnailUrl={active.thumbnailUrl}
+            title={title}
+            autoplay
+            playable
+            overlay={filmOverlay(active)}
+            sizes="(max-width: 768px) 100vw, 70vw"
+          />
+        </div>
+      ) : films.length > 0 ? (
+        <ul className="director-profile-player grid min-w-0 grid-cols-1 gap-4 md:grid-cols-3">
+          {films.map((film, index) => (
+            <li
+              key={`${film.brand}-${film.project}-${index}`}
+            >
+              <FilmTile
+                directorName={director.name}
+                film={film}
+                onPlay={film.videoId ? () => selectFilm(index) : undefined}
+              />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="director-profile-player min-w-0" />
+      )}
     </>
   );
 }

@@ -5,7 +5,6 @@ import type { ReactNode } from "react";
 import { FooterSlotProvider, useFooterSlot } from "@/components/sections/FooterSlot";
 import { SiteFooter } from "@/components/sections/SiteFooter";
 import { SiteHeader } from "@/components/sections/SiteHeader";
-import { usePageTransition } from "@/components/ui/PageTransitionWipe";
 
 type SiteShellProps = {
   children: ReactNode;
@@ -35,24 +34,21 @@ function SiteShellFrame({
   pathname: string;
   children: ReactNode;
 }) {
-  const { isWiping } = usePageTransition();
   const { center } = useFooterSlot();
   const isHome = pathname === "/";
-  const isDirectorProfile = pathname.startsWith("/directors/");
-  const tone = isHome && !isWiping ? "light" : "dark";
+  const headerTone = isHome ? "light" : "dark";
+  const footerTone = isHome ? "light" : "dark";
 
   return (
     <div className="relative flex h-dvh min-h-0 flex-col overflow-hidden px-gutter py-chrome">
-      <SiteHeader tone={tone} className="relative z-20 shrink-0" />
+      <SiteHeader tone={headerTone} className="relative z-30 shrink-0" />
       <div className="scrollbar-none z-10 flex min-h-0 flex-1 flex-col overflow-y-auto">
         {children}
       </div>
       <SiteFooter
-        tone={tone}
-        wipeToDirectors={isHome || isDirectorProfile}
-        wipeSkipBand={isDirectorProfile}
+        tone={footerTone}
+        wipeToDirectors={isHome}
         center={center}
-        underlay={isDirectorProfile}
         className="shrink-0"
       />
     </div>

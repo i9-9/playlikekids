@@ -38,14 +38,22 @@ export function toVimeoWatchUrl(videoId: string, hash?: string | null): string {
 export function toVimeoEmbedUrl(
   videoId: string,
   hash?: string | null,
-  options: { autoplay?: boolean } = {},
+  options: { autoplay?: boolean; controls?: boolean; muted?: boolean } = {},
 ): string {
   const url = new URL(`https://player.vimeo.com/video/${videoId}`);
   if (hash) url.searchParams.set("h", hash);
   url.searchParams.set("title", "0");
   url.searchParams.set("byline", "0");
   url.searchParams.set("portrait", "0");
+  url.searchParams.set("dnt", "1");
+  url.searchParams.set("playsinline", "1");
+  url.searchParams.set("keyboard", "0");
+  url.searchParams.set("pip", "1");
+  url.searchParams.set("transparent", "0");
+  url.searchParams.set("controls", options.controls === true ? "1" : "0");
   if (options.autoplay) url.searchParams.set("autoplay", "1");
+  // Browsers block unmuted autoplay once the click handler yields (Vimeo ready).
+  if (options.muted || options.autoplay) url.searchParams.set("muted", "1");
   return url.toString();
 }
 

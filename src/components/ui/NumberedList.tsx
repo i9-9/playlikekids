@@ -6,6 +6,16 @@ export type NumberedListItem = {
   href: string;
 };
 
+export function directorsToListItems(
+  directors: Array<{ order: number; name: string; slug: string }>,
+): NumberedListItem[] {
+  return directors.map((director) => ({
+    number: String(director.order).padStart(2, "0"),
+    label: director.name,
+    href: `/directors/${director.slug}`,
+  }));
+}
+
 type NumberedListProps = {
   items: NumberedListItem[];
   activeHref?: string;
@@ -26,20 +36,31 @@ export function NumberedListHeading({
   label = "Directors",
   className = "",
   as: Tag = "h1",
+  href,
 }: {
   number?: string;
   label?: string;
   className?: string;
   as?: "h1" | "h2";
+  href?: string;
 }) {
+  const inner = href ? (
+    <Link href={href} scroll={false} className={`${numberedListRowClassName} font-black`}>
+      <span className="tabular-nums">{number}</span>
+      <span>{label}</span>
+    </Link>
+  ) : (
+    <span className={`${numberedListRowClassName} font-black`}>
+      <span className="tabular-nums">{number}</span>
+      <span>{label}</span>
+    </span>
+  );
+
   return (
     <Tag
       className={`${numberedListIndentClassName} ${numberedListTypeClassName} ${className}`}
     >
-      <span className={`${numberedListRowClassName} font-black`}>
-        <span className="tabular-nums">{number}</span>
-        <span>{label}</span>
-      </span>
+      {inner}
     </Tag>
   );
 }
@@ -57,6 +78,7 @@ export function NumberedList({
           <li key={item.href}>
             <Link
               href={item.href}
+              scroll={false}
               className={`${numberedListRowClassName} ${isActive ? "font-black" : "font-medium"}`}
               aria-current={isActive ? "page" : undefined}
             >
