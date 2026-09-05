@@ -48,7 +48,7 @@ function copyStylesTo(target: Document) {
   }
 }
 
-type VideoPlayerProps = {
+export type VideoPlayerProps = {
   videoId: string;
   privacyHash?: string | null;
   thumbnailUrl: string;
@@ -550,8 +550,8 @@ export function VideoPlayer({
             alt={label}
             fill
             sizes={sizes}
+            quality={90}
             className="object-cover"
-            unoptimized
           />
           {overlay}
         </motion.div>
@@ -584,7 +584,9 @@ export function VideoPlayer({
                 width: "min(22rem, calc(100vw - 2rem))",
                 aspectRatio: "16 / 9",
               }
-            : undefined
+            : layoutId
+              ? { zIndex: 10 }
+              : undefined
       }
       tabIndex={0}
       role="region"

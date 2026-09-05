@@ -1,9 +1,9 @@
+import { cache } from "react";
 import { isSanityConfigured, sanityFetch } from "./client";
 import { urlForImage } from "./image";
-import { LOCAL_HERO_IMAGES, toSeedDirectors } from "./seed-data";
-import type { Director, Hero, HeroDocument, SanityImage } from "./types";
-
-const LOCAL_HERO: Hero = { _id: "local-hero", images: LOCAL_HERO_IMAGES };
+import { toSeedDirectors } from "./seed-data";
+import { logFallback } from "@/lib/log";
+import type { Director, SanityImage } from "./types";
 
 const REVALIDATE_SECONDS = 60;
 
@@ -28,7 +28,8 @@ function toDirector(doc: DirectorDocument): Director {
     try {
       // Raw Sanity CDN URL — next/image handles resize + encode.
       previewImageUrl = urlForImage(doc.previewImage).url();
-    } catch {
+    } catch (error) {
+      logFallback(`urlForImage failed for director ${doc._id}`, error);
       previewImageUrl = null;
     }
   }
@@ -73,17 +74,7 @@ export const directorBySlugQuery = /* groq */ `
   *[_type == "director" && slug.current == $slug][0] ${directorsProjection}
 `;
 
-export const heroQuery = /* groq */ `
-  *[_type == "hero"][0]{
-    _id,
-    images[]{
-      ...,
-      alt
-    }
-  }
-`;
-
-export async function getAllDirectors(): Promise<Director[]> {
+export const getAllDirectors = cache(async function getAllDirectors(): Promise<Director[]> {
   if (!isSanityConfigured) {
     return toSeedDirectors();
   }
@@ -96,6 +87,7 @@ export async function getAllDirectors(): Promise<Director[]> {
     });
 
     if (!docs?.length) {
+      logFallback("getAllDirectors: CMS returned no directors, using seed");
       return toSeedDirectors();
     }
 
@@ -108,12 +100,13 @@ export async function getAllDirectors(): Promise<Director[]> {
           Array.isArray(director.credits) &&
           director.credits.length > 0,
       );
-  } catch {
+  } catch (error) {
+    logFallback("getAllDirectors: fetch failed, using seed", error);
     return toSeedDirectors();
   }
-}
+});
 
-export async function getDirectorBySlug(
+export const getDirectorBySlug = cache(async function getDirectorBySlug(
   slug: string,
 ): Promise<Director | null> {
   if (!isSanityConfigured) {
@@ -129,47 +122,9 @@ export async function getDirectorBySlug(
     });
 
     return doc ? toDirector(doc) : null;
-  } catch {
+  } catch (error) {
+    logFallback(`getDirectorBySlug(${slug}): fetch failed, using seed`, error);
     return toSeedDirectors().find((d) => d.slug === slug) ?? null;
   }
-}
+});
 
-export async function getHero(): Promise<Hero> {
-  if (!isSanityConfigured) {
-    return LOCAL_HERO;
-  }
-
-  try {
-    const doc = await sanityFetch<HeroDocument | null>({
-      query: heroQuery,
-      revalidate: REVALIDATE_SECONDS,
-      tags: ["hero"],
-    });
-
-    const images =
-      doc?.images
-        ?.map((image, index) => {
-          try {
-            return {
-              // Raw Sanity CDN URL — next/image handles resize + encode.
-              url: urlForImage(image).url(),
-              alt:
-                image.alt?.trim() ||
-                `Play Like Kids — hero frame ${index + 1}`,
-            };
-          } catch {
-            return null;
-          }
-        })
-        .filter((image): image is Hero["images"][number] => Boolean(image)) ??
-      [];
-
-    if (images.length === 3) {
-      return { _id: doc?._id ?? "hero", images };
-    }
-
-    return LOCAL_HERO;
-  } catch {
-    return LOCAL_HERO;
-  }
-}

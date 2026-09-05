@@ -3,6 +3,10 @@
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion, type Transition } from "motion/react";
 import { useEffect, useState } from "react";
 import { AspectMedia } from "@/components/ui/AspectMedia";
+import {
+  LazyVideoPlayer,
+  prefetchVideoPlayer,
+} from "@/components/ui/LazyVideoPlayer";
 import { CreditLabel } from "@/components/ui/CreditLabel";
 import { SundanceLockup } from "@/components/ui/SundanceLockup";
 import { WIPE_EASE } from "@/components/ui/PageTransitionWipe";
@@ -33,12 +37,14 @@ function FilmTile({
   film,
   layoutId,
   layoutTransition,
+  onLayoutAnimationComplete,
   onPlay,
 }: {
   directorName: string;
   film: ResolvedFilm;
   layoutId?: string;
   layoutTransition?: Transition;
+  onLayoutAnimationComplete?: () => void;
   onPlay?: () => void;
 }) {
   const title = `${directorName} — ${formatCreditLabel(film)}`;
@@ -46,13 +52,13 @@ function FilmTile({
 
   const media = film.thumbnailUrl ? (
     <AspectMedia
-      kind="image"
       src={film.thumbnailUrl}
       alt={title}
       overlay={overlay}
       sizes="(max-width: 768px) 100vw, 22vw"
       layoutId={layoutId}
       layoutTransition={layoutTransition}
+      onLayoutAnimationComplete={onLayoutAnimationComplete}
     />
   ) : (
     <div className="aspect-video w-full bg-foreground/10" aria-hidden />
@@ -77,6 +83,7 @@ function FilmTile({
     <button
       type="button"
       onClick={onPlay}
+      onPointerEnter={prefetchVideoPlayer}
       className="group flex min-w-0 w-full flex-col gap-2 text-left"
     >
       {media}
@@ -90,29 +97,35 @@ export function DirectorProfile({ director }: DirectorProfileProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
+  const [gridOpen, setGridOpen] = useState(true);
   const films = director.films;
   const active = films[activeIndex] ?? null;
 
   const instant = Boolean(reduced);
   const fadeTransition = instant ? { duration: 0 } : FADE;
   const layoutTransition = instant ? { duration: 0 } : LAYOUT;
-  const itemTransition = instant
-    ? { duration: 0 }
-    : { layout: LAYOUT, opacity: FADE };
 
   const filmLayoutId = (index: number) =>
     `director-film-${director.slug}-${index}`;
 
+  const finishMorph = () => {
+    setGridOpen(true);
+    setPlayerReady(true);
+  };
+
   const selectFilm = (index: number) => {
+    prefetchVideoPlayer();
     const fromGrid = !playing;
     setActiveIndex(index);
     setPlaying(true);
     setPlayerReady(instant || !fromGrid);
+    if (!instant && fromGrid) setGridOpen(false);
   };
 
   const closePlayer = () => {
     setPlaying(false);
     setPlayerReady(false);
+    if (!instant) setGridOpen(false);
   };
 
   useEffect(() => {
@@ -120,6 +133,12 @@ export function DirectorProfile({ director }: DirectorProfileProps) {
     const id = window.setTimeout(() => setPlayerReady(true), instant ? 0 : 520);
     return () => window.clearTimeout(id);
   }, [playing, playerReady, instant]);
+
+  useEffect(() => {
+    if (playing || gridOpen || instant) return;
+    const id = window.setTimeout(() => setGridOpen(true), 520);
+    return () => window.clearTimeout(id);
+  }, [playing, gridOpen, instant]);
 
   const title = active
     ? `${director.name} — ${formatCreditLabel(active)}`
@@ -192,60 +211,60 @@ export function DirectorProfile({ director }: DirectorProfileProps) {
 
       {films.length > 0 ? (
         <ul
-          className={`director-profile-player grid min-w-0 grid-cols-1 gap-4 ${
+          className={`director-profile-player isolate grid min-w-0 grid-cols-1 gap-4 ${
             playing ? "" : "md:grid-cols-3"
           }`}
         >
-          <AnimatePresence initial={false} mode="popLayout">
-            {films.map((film, index) => {
-              const selected = index === activeIndex;
-              if (playing && !selected) return null;
+          {films.map((film, index) => {
+            const selected = index === activeIndex;
+            if (!selected && (playing || !gridOpen)) return null;
 
-              const layoutId = film.thumbnailUrl
-                ? filmLayoutId(index)
-                : undefined;
-              const showPlayer =
-                playing &&
-                selected &&
-                Boolean(film.videoId && film.thumbnailUrl);
+            const layoutId = film.thumbnailUrl
+              ? filmLayoutId(index)
+              : undefined;
+            const showPlayer =
+              playing &&
+              selected &&
+              Boolean(film.videoId && film.thumbnailUrl);
 
-              return (
-                <motion.li
-                  key={`${film.brand}-${film.project}-${index}`}
-                  layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={itemTransition}
-                >
-                  {showPlayer ? (
-                    <AspectMedia
-                      kind="vimeo"
-                      videoId={film.videoId!}
-                      privacyHash={film.vimeoHash}
-                      thumbnailUrl={film.thumbnailUrl!}
-                      title={title}
-                      autoplay={playerReady}
-                      playable
-                      overlay={filmOverlay(film)}
-                      sizes="(max-width: 768px) 100vw, 70vw"
-                      layoutId={layoutId}
-                      layoutTransition={layoutTransition}
-                      onLayoutAnimationComplete={() => setPlayerReady(true)}
-                    />
-                  ) : (
-                    <FilmTile
-                      directorName={director.name}
-                      film={film}
-                      layoutId={layoutId}
-                      layoutTransition={layoutTransition}
-                      onPlay={film.videoId ? () => selectFilm(index) : undefined}
-                    />
-                  )}
-                </motion.li>
-              );
-            })}
-          </AnimatePresence>
+            return (
+              <motion.li
+                key={`${film.brand}-${film.project}-${index}`}
+                initial={false}
+                animate={{ opacity: 1 }}
+                transition={fadeTransition}
+                className={selected ? "relative z-10" : undefined}
+              >
+                {showPlayer ? (
+                  <LazyVideoPlayer
+                    videoId={film.videoId!}
+                    privacyHash={film.vimeoHash}
+                    thumbnailUrl={film.thumbnailUrl!}
+                    title={title}
+                    autoplay={playerReady}
+                    playable
+                    overlay={filmOverlay(film)}
+                    sizes="(max-width: 768px) 100vw, 70vw"
+                    className="relative w-full overflow-hidden bg-foreground/5 aspect-video"
+                    layoutId={layoutId}
+                    layoutTransition={layoutTransition}
+                    onLayoutAnimationComplete={finishMorph}
+                  />
+                ) : (
+                  <FilmTile
+                    directorName={director.name}
+                    film={film}
+                    layoutId={layoutId}
+                    layoutTransition={layoutTransition}
+                    onLayoutAnimationComplete={
+                      selected ? finishMorph : undefined
+                    }
+                    onPlay={film.videoId ? () => selectFilm(index) : undefined}
+                  />
+                )}
+              </motion.li>
+            );
+          })}
         </ul>
       ) : (
         <div className="director-profile-player min-w-0" />

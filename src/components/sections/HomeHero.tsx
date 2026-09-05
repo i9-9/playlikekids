@@ -18,6 +18,8 @@ export type HeroTransition = "fade" | "cut" | "wipe";
 const FADE_DURATION_S = 1.1;
 const INTRO_DURATION_S = 0.8;
 const WIPE_DURATION_S = 0.85;
+/** Full-bleed stills; default next/image q=75 looks soft at 100vw. */
+const HERO_IMAGE_QUALITY = 90;
 const STORAGE_KEY = "plk-home-slide-transition";
 const EASE_SITE = [0.76, 0, 0.24, 1] as const;
 
@@ -119,8 +121,8 @@ export function HomeHero({
       fill
       priority={index === 0}
       sizes="100vw"
+      quality={HERO_IMAGE_QUALITY}
       className="object-cover"
-      unoptimized={frame.url.startsWith("https://")}
     />
   );
 
@@ -172,8 +174,8 @@ function HeroSlide({
       fill
       priority={priority}
       sizes="100vw"
+      quality={HERO_IMAGE_QUALITY}
       className="object-cover max-w-none"
-      unoptimized={frame.url.startsWith("https://")}
     />
   );
 }

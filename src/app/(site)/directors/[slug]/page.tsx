@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DirectorProfile } from "@/components/sections/DirectorProfile";
-import { resolveDirectorFilms } from "@/lib/directors/resolve-media";
+import { JsonLd } from "@/components/seo/JsonLd";
+import {
+  resolveDirectorFilms,
+  resolveDirectorOgImage,
+} from "@/lib/directors/resolve-media";
+import { directorPageJsonLd } from "@/lib/json-ld";
 import { getAllDirectors, getDirectorBySlug } from "@/lib/sanity/queries";
 import { SITE_NAME } from "@/lib/site";
 
@@ -27,6 +32,7 @@ export async function generateMetadata({
 
   const description = directorDescription(director.name);
   const path = `/directors/${director.slug}`;
+  const image = await resolveDirectorOgImage(director);
 
   return {
     title: director.name,
@@ -39,20 +45,13 @@ export async function generateMetadata({
       title: `${director.name} — ${SITE_NAME}`,
       description,
       url: path,
-      images: [
-        {
-          url: "/ASSETS/LOGO_PNG/logo-tierra.png",
-          width: 1585,
-          height: 776,
-          alt: director.name,
-        },
-      ],
+      images: [image],
     },
     twitter: {
       card: "summary_large_image",
       title: `${director.name} — ${SITE_NAME}`,
       description,
-      images: ["/ASSETS/LOGO_PNG/logo-tierra.png"],
+      images: [image],
     },
   };
 }
@@ -68,13 +67,16 @@ export default async function DirectorPage({ params }: DirectorPageProps) {
   const films = await resolveDirectorFilms(director);
 
   return (
-    <DirectorProfile
-      key={director.slug}
-      director={{
-        slug: director.slug,
-        name: director.name,
-        films,
-      }}
-    />
+    <>
+      <JsonLd data={directorPageJsonLd(director.name, director.slug)} />
+      <DirectorProfile
+        key={director.slug}
+        director={{
+          slug: director.slug,
+          name: director.name,
+          films,
+        }}
+      />
+    </>
   );
 }

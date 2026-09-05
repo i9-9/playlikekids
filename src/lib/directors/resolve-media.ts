@@ -2,13 +2,9 @@ import {
   extractVimeoId,
   getVimeoThumbnail,
 } from "@/lib/vimeo/thumbnail";
-import type {
-  Credit,
-  Director,
-  FestivalSelection,
-  HeroImage,
-} from "@/lib/sanity/types";
+import type { Credit, Director, HeroImage } from "@/lib/sanity/types";
 import type { DirectorCardData } from "@/components/sections/DirectorCard";
+import { SITE_LOGO_PATH } from "@/lib/site";
 
 export type ResolvedFilm = Credit & {
   videoId: string | null;
@@ -31,26 +27,8 @@ function localDirectorImage(slug: string): string | null {
   return LOCAL_DIRECTOR_IMAGES[slug] ?? null;
 }
 
-/** Live CMS docs may not have festival fields yet. Used for credit labels, not laurels. */
-const FESTIVAL_FALLBACK: Record<string, Record<string, FestivalSelection>> = {
-  "gabriela-ortega": {
-    Huella: {
-      name: "Sundance Film Festival",
-      year: "2023",
-      selection: "Official Selection",
-    },
-    "Marga en el DF": {
-      name: "Sundance Film Festival",
-      year: "2026",
-      selection: "Official Selection",
-    },
-  },
-};
-
-function withFestival(director: Director, credit: Credit): Credit {
-  if (credit.festival?.name) return credit;
-  const fallback = FESTIVAL_FALLBACK[director.slug]?.[credit.brand] ?? null;
-  return { ...credit, festival: fallback };
+function withVimeoThumbWidth(url: string, width: number): string {
+  return url.replace(/-d_\d+/, `-d_${width}`);
 }
 
 async function resolveFilm(credit: Credit): Promise<ResolvedFilm> {
@@ -78,10 +56,10 @@ async function resolveFirstFilm(
 export async function resolveDirectorFilms(
   director: Director,
 ): Promise<ResolvedFilm[]> {
-  return Promise.all(
-    director.credits.map((credit) => resolveFilm(withFestival(director, credit))),
-  );
+  return Promise.all(director.credits.map((credit) => resolveFilm(credit)));
 }
+
+const HERO_THUMB_WIDTH = 1920;
 
 /** Home hero: Vimeo poster of each director's first film, in roster order. */
 export async function resolveHomeHeroImages(
@@ -89,19 +67,68 @@ export async function resolveHomeHeroImages(
 ): Promise<HeroImage[]> {
   const frames = await Promise.all(
     directors.map(async (director) => {
-      const film = await resolveFirstFilm(director);
-      if (!film?.thumbnailUrl) return null;
+      const firstCredit = director.credits[0];
+      const videoId = firstCredit?.vimeoId
+        ? extractVimeoId(firstCredit.vimeoId)
+        : null;
+      if (!videoId || !firstCredit) return null;
 
-      const title = [film.brand, film.project].filter(Boolean).join(" — ");
+      const thumb = await getVimeoThumbnail(videoId, firstCredit.vimeoHash, {
+        width: HERO_THUMB_WIDTH,
+      });
+      if (!thumb?.thumbnailUrl) return null;
+
+      const title = [firstCredit.brand, firstCredit.project]
+        .filter(Boolean)
+        .join(" — ");
 
       return {
-        url: film.thumbnailUrl,
+        url: withVimeoThumbWidth(thumb.thumbnailUrl, HERO_THUMB_WIDTH),
         alt: title ? `${director.name} — ${title}` : director.name,
       };
     }),
   );
 
   return frames.filter((frame): frame is HeroImage => Boolean(frame));
+}
+
+const OG_THUMB_WIDTH = 1280;
+const OG_THUMB_HEIGHT = 720;
+
+export type ShareImage = {
+  url: string;
+  width: number;
+  height: number;
+  alt: string;
+};
+
+/** First-film still for social cards. Falls back to local art, then the site logo. */
+export async function resolveDirectorOgImage(
+  director: Director,
+): Promise<ShareImage> {
+  const film = await resolveFirstFilm(director);
+  if (film?.thumbnailUrl) {
+    return {
+      url: withVimeoThumbWidth(film.thumbnailUrl, OG_THUMB_WIDTH),
+      width: OG_THUMB_WIDTH,
+      height: OG_THUMB_HEIGHT,
+      alt: director.name,
+    };
+  }
+
+  const fallback =
+    localDirectorImage(director.slug) ??
+    director.previewImageUrl ??
+    SITE_LOGO_PATH;
+
+  const isLogo = fallback === SITE_LOGO_PATH;
+
+  return {
+    url: fallback,
+    width: isLogo ? 1585 : OG_THUMB_WIDTH,
+    height: isLogo ? 776 : OG_THUMB_HEIGHT,
+    alt: director.name,
+  };
 }
 
 export async function toDirectorCards(

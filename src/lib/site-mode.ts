@@ -6,6 +6,7 @@
  *
  * While the gate is on, `/?preview=SITE_PREVIEW_SECRET` unlocks the real site
  * for that browser via an httpOnly cookie. `/?preview=off` locks it again.
+ * Public indexing (robots, sitemap, meta) stays off until the flag is false.
  */
 export const SITE_PREVIEW_COOKIE = "plk_site_preview";
 export const SITE_PREVIEW_QUERY = "preview";

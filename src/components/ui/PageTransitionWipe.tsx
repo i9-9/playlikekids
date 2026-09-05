@@ -68,6 +68,34 @@ function pathMatches(pathname: string, href: string) {
 
 const EMPTY_WIPE_RECT: WipeRect = { top: 0, left: 0, right: 0, bottom: 0 };
 
+function numericStyle(value: unknown, fallback: number): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number.parseFloat(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+}
+
+/** Cover box from Motion values — left-origin scaleX, no per-frame DOM measure. */
+function publishWipeGeometry(
+  latest: Record<string, unknown>,
+  fallback: { top: number; height: number; width: number; scaleX: number },
+  wipeProgress: MotionValue<number>,
+  wipeRect: MotionValue<WipeRect>,
+) {
+  const scaleX = numericStyle(latest.scaleX, fallback.scaleX);
+  const top = numericStyle(latest.top, fallback.top);
+  const height = numericStyle(latest.height, fallback.height);
+  wipeProgress.set(scaleX);
+  wipeRect.set({
+    top,
+    left: 0,
+    right: fallback.width * scaleX,
+    bottom: top + height,
+  });
+}
+
 const PageTransitionContext = createContext<PageTransitionContextValue | null>(
   null,
 );
@@ -343,8 +371,6 @@ function coverFrame(viewportHeight: number) {
   };
 }
 
-const WIPE_EASE_CSS = `cubic-bezier(${WIPE_EASE.join(", ")})`;
-
 function ReverseBandShrink({
   bandTop,
   bandHeight,
@@ -364,54 +390,34 @@ function ReverseBandShrink({
   wipeRect: MotionValue<WipeRect>;
   onDone: () => void;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(viewportWidth);
-
-  useEffect(() => {
-    wipeProgress.set(1);
-    const outer = window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        setWidth(0);
-      });
-    });
-    return () => window.cancelAnimationFrame(outer);
-  }, [wipeProgress]);
-
-  useEffect(() => {
-    let frame = 0;
-    const publish = () => {
-      const el = ref.current;
-      if (el) {
-        const rect = el.getBoundingClientRect();
-        wipeRect.set({
-          top: rect.top,
-          left: rect.left,
-          right: rect.right,
-          bottom: rect.bottom,
-        });
-        if (viewportWidth > 0) {
-          wipeProgress.set(rect.width / viewportWidth);
-        }
-      }
-      frame = window.requestAnimationFrame(publish);
-    };
-    frame = window.requestAnimationFrame(publish);
-    return () => window.cancelAnimationFrame(frame);
-  }, [wipeProgress, wipeRect, viewportWidth]);
+  const fallback = {
+    top: bandTop,
+    height: bandHeight,
+    width: viewportWidth,
+    scaleX: 1,
+  };
 
   return (
-    <div
-      ref={ref}
+    <motion.div
       className={`pointer-events-none fixed left-0 z-0 bg-wipe ${className}`}
       style={{
         top: bandTop,
         height: bandHeight,
-        width,
-        transition: `width ${durationMs}ms ${WIPE_EASE_CSS}`,
+        width: "100vw",
+        transformOrigin: "left center",
       }}
-      onTransitionEnd={(event) => {
-        if (event.propertyName === "width") onDone();
+      initial={{ scaleX: 1 }}
+      animate={{ scaleX: 0 }}
+      transition={{ duration: durationMs / 1000, ease: WIPE_EASE }}
+      onUpdate={(latest) => {
+        publishWipeGeometry(
+          latest as Record<string, unknown>,
+          fallback,
+          wipeProgress,
+          wipeRect,
+        );
       }}
+      onAnimationComplete={onDone}
       aria-hidden="true"
     />
   );
@@ -433,16 +439,11 @@ export function PageTransitionWipe({
   const { wipeProgress, wipeRect, isRevealing, direction, finishReveal } =
     usePageTransition();
   const reverse = direction === "reverse";
-  const wipeRef = useRef<HTMLDivElement>(null);
   const [phase, setPhase] = useState<WipePhase>(reverse ? "rise" : "band");
   const [bandTop, setBandTop] = useState(0);
   const [bandHeight, setBandHeight] = useState(0);
-  const [viewportHeight, setViewportHeight] = useState(
-    () => (typeof window === "undefined" ? 0 : window.innerHeight),
-  );
-  const [viewportWidth, setViewportWidth] = useState(
-    () => (typeof window === "undefined" ? 0 : window.innerWidth),
-  );
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [viewportWidth, setViewportWidth] = useState(0);
 
   useLayoutEffect(() => {
     if (!active || !anchor) {
@@ -512,28 +513,6 @@ export function PageTransitionWipe({
   const isRise = phase === "rise";
   const uncovering = reverse && isRevealing && bandHeight > 0;
   const cover = coverFrame(viewportHeight || bandHeight);
-
-  useEffect(() => {
-    if (!active) return;
-
-    let frame = 0;
-    const publish = () => {
-      const el = wipeRef.current;
-      if (el) {
-        const rect = el.getBoundingClientRect();
-        wipeRect.set({
-          top: rect.top,
-          left: rect.left,
-          right: rect.right,
-          bottom: rect.bottom,
-        });
-      }
-      frame = window.requestAnimationFrame(publish);
-    };
-
-    frame = window.requestAnimationFrame(publish);
-    return () => window.cancelAnimationFrame(frame);
-  }, [active, wipeRect]);
 
   if (!active || !anchor) return null;
   if (!reverse && bandHeight <= 0) return null;
@@ -614,7 +593,6 @@ export function PageTransitionWipe({
 
   return (
     <motion.div
-      ref={wipeRef}
       className={`pointer-events-none fixed left-0 z-0 bg-wipe ${className}`}
       style={{
         width: "100vw",
@@ -634,9 +612,17 @@ export function PageTransitionWipe({
       animate={animate}
       transition={transition}
       onUpdate={(latest) => {
-        if (typeof latest.scaleX === "number") {
-          wipeProgress.set(latest.scaleX);
-        }
+        publishWipeGeometry(
+          latest as Record<string, unknown>,
+          {
+            top: bandTop,
+            height: bandHeight,
+            width: viewportWidth,
+            scaleX: isRise || reverse ? 1 : 0,
+          },
+          wipeProgress,
+          wipeRect,
+        );
       }}
       aria-hidden="true"
     />

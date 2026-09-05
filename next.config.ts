@@ -34,6 +34,8 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1", "localhost"],
   poweredByHeader: false,
   images: {
+    // Next 16 only allows 75 unless listed. Home hero uses 90.
+    qualities: [75, 90],
     remotePatterns: [
       {
         protocol: "https",

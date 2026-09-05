@@ -15,7 +15,7 @@ module.exports = {
         wipe: "var(--color-wipe)",
       },
       fontFamily: {
-        druk: ['"Druk Heavy"', "sans-serif"],
+        druk: ["var(--font-druk)", "sans-serif"],
         roboto: ["var(--font-roboto)", "sans-serif"],
       },
       fontSize: {

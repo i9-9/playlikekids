@@ -16,10 +16,6 @@ type SiteShellProps = {
 export function SiteShell({ children }: SiteShellProps) {
   const pathname = usePathname();
 
-  if (pathname.startsWith("/studio")) {
-    return children;
-  }
-
   return (
     <FooterSlotProvider>
       <SiteShellFrame pathname={pathname}>{children}</SiteShellFrame>

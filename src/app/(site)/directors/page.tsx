@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { DirectorsGrid } from "@/components/sections/DirectorsGrid";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { toDirectorCards } from "@/lib/directors/resolve-media";
+import { directorsIndexJsonLd } from "@/lib/json-ld";
 import { getAllDirectors } from "@/lib/sanity/queries";
 import { SITE_NAME } from "@/lib/site";
 
@@ -39,5 +41,10 @@ export default async function DirectorsPage() {
   const directors = await getAllDirectors();
   const cards = await toDirectorCards(directors);
 
-  return <DirectorsGrid directors={cards} />;
+  return (
+    <>
+      <JsonLd data={directorsIndexJsonLd()} />
+      <DirectorsGrid directors={cards} />
+    </>
+  );
 }

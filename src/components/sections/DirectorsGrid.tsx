@@ -1,5 +1,7 @@
-import { type DirectorCardData } from "@/components/sections/DirectorCard";
-import { DirectorsGridMotion } from "@/components/sections/DirectorsGridMotion";
+import {
+  DirectorCard,
+  type DirectorCardData,
+} from "@/components/sections/DirectorCard";
 
 type DirectorsGridProps = {
   directors: DirectorCardData[];
@@ -17,7 +19,14 @@ export function DirectorsGrid({
   return (
     <div className={`flex flex-col md:min-h-0 ${className}`}>
       <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto scrollbar-none md:grid md:grid-cols-5 md:snap-none md:overflow-visible">
-        <DirectorsGridMotion directors={directors} />
+        {directors.map((director) => (
+          <div
+            key={director.slug}
+            className="w-director shrink-0 snap-start md:w-auto"
+          >
+            <DirectorCard director={director} />
+          </div>
+        ))}
       </div>
     </div>
   );

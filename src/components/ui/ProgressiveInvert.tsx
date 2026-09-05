@@ -20,7 +20,9 @@ type ProgressiveInvertProps = {
   dark: ReactNode;
 };
 
-function clipFromWipe(el: DOMRect, wipe: WipeRect): string {
+type Box = WipeRect;
+
+function clipFromWipe(el: Box, wipe: WipeRect): string {
   const ix = Math.max(el.left, wipe.left);
   const iy = Math.max(el.top, wipe.top);
   const ir = Math.min(el.right, wipe.right);
@@ -33,6 +35,16 @@ function clipFromWipe(el: DOMRect, wipe: WipeRect): string {
   return `inset(${iy - el.top}px ${el.right - ir}px ${el.bottom - ib}px ${ix - el.left}px)`;
 }
 
+function readBox(el: HTMLElement): Box {
+  const rect = el.getBoundingClientRect();
+  return {
+    top: rect.top,
+    left: rect.left,
+    right: rect.right,
+    bottom: rect.bottom,
+  };
+}
+
 /**
  * Reveals `dark` where the white wipe currently covers this element.
  * Footer lockups invert left → right with the band; header items wait
@@ -43,29 +55,49 @@ export function ProgressiveInvert({
   light,
   dark,
 }: ProgressiveInvertProps) {
-  const { isWiping, skipBand, wipeProgress, wipeRect } = usePageTransition();
+  const { isWiping, skipBand, wipeRect } = usePageTransition();
   const active = isWiping && !skipBand;
   const ref = useRef<HTMLSpanElement>(null);
+  const elBox = useRef<Box | null>(null);
   const clipPath = useMotionValue("inset(0 100% 0 0)");
 
-  const syncClip = useCallback(() => {
+  const measure = useCallback(() => {
     const el = ref.current;
-    if (!active || !el) {
+    elBox.current = el ? readBox(el) : null;
+  }, []);
+
+  const syncClip = useCallback(() => {
+    if (!active) {
+      clipPath.set("inset(0 100% 0 0)");
+      return;
+    }
+    const box = elBox.current;
+    if (!box) {
+      clipPath.set("inset(0 100% 0 0)");
+      return;
+    }
+    clipPath.set(clipFromWipe(box, wipeRect.get()));
+  }, [active, clipPath, wipeRect]);
+
+  useLayoutEffect(() => {
+    if (!active) {
+      elBox.current = null;
       clipPath.set("inset(0 100% 0 0)");
       return;
     }
 
-    clipPath.set(clipFromWipe(el.getBoundingClientRect(), wipeRect.get()));
-  }, [active, clipPath, wipeRect]);
-
-  useLayoutEffect(() => {
+    measure();
     syncClip();
-    if (!active) return;
-    window.addEventListener("resize", syncClip);
-    return () => window.removeEventListener("resize", syncClip);
-  }, [active, syncClip]);
 
-  useMotionValueEvent(wipeProgress, "change", syncClip);
+    const onRelayout = () => {
+      measure();
+      syncClip();
+    };
+
+    window.addEventListener("resize", onRelayout);
+    return () => window.removeEventListener("resize", onRelayout);
+  }, [active, clipPath, measure, syncClip]);
+
   useMotionValueEvent(wipeRect, "change", syncClip);
 
   return (

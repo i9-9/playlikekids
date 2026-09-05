@@ -8,7 +8,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { flushSync } from "react-dom";
 import {
   NumberedList,
   NumberedListHeading,
@@ -180,10 +179,10 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
       event.stopPropagation();
 
       outgoingIsIndex.current = isIndex;
-      flushSync(() => {
-        setGhostHtml(snapshotMiddle(source));
+      setGhostHtml(snapshotMiddle(source));
+      queueMicrotask(() => {
+        router.push(url.pathname);
       });
-      router.push(url.pathname);
     };
 
     document.addEventListener("click", onClick, true);

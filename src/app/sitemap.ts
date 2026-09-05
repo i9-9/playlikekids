@@ -1,8 +1,13 @@
 import type { MetadataRoute } from "next";
 import { getAllDirectors } from "@/lib/sanity/queries";
 import { SITE_URL } from "@/lib/site";
+import { isUnderConstruction } from "@/lib/site-mode";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  if (isUnderConstruction()) {
+    return [];
+  }
+
   const directors = await getAllDirectors();
   const lastModified = new Date();
 

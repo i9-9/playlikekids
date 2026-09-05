@@ -3,6 +3,8 @@
  * Unlisted videos need the privacy hash (`vimeoHash`) on both oEmbed and embed.
  */
 
+import { logFallback } from "../log";
+
 export type VimeoThumbnail = {
   videoId: string;
   thumbnailUrl: string;
@@ -69,13 +71,15 @@ type OEmbedResponse = {
 export async function getVimeoThumbnail(
   videoId: string,
   hash?: string | null,
+  options: { width?: number } = {},
 ): Promise<VimeoThumbnail | null> {
   const id = extractVimeoId(videoId);
   if (!id) return null;
 
+  const width = options.width ?? 1280;
   const oembedUrl = new URL("https://vimeo.com/api/oembed.json");
   oembedUrl.searchParams.set("url", toVimeoWatchUrl(id, hash));
-  oembedUrl.searchParams.set("width", "1280");
+  oembedUrl.searchParams.set("width", String(width));
 
   try {
     const response = await fetch(oembedUrl.toString(), {
@@ -83,11 +87,15 @@ export async function getVimeoThumbnail(
     });
 
     if (!response.ok) {
+      logFallback(
+        `Vimeo oEmbed ${response.status} for ${id} (${oembedUrl})`,
+      );
       return null;
     }
 
     const data = (await response.json()) as OEmbedResponse;
     if (!data.thumbnail_url) {
+      logFallback(`Vimeo oEmbed missing thumbnail_url for ${id}`);
       return null;
     }
 
@@ -98,7 +106,8 @@ export async function getVimeoThumbnail(
       width: data.thumbnail_width ?? data.width ?? null,
       height: data.thumbnail_height ?? data.height ?? null,
     };
-  } catch {
+  } catch (error) {
+    logFallback(`Vimeo oEmbed failed for ${id}`, error);
     return null;
   }
 }

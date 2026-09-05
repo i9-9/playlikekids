@@ -2,14 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: "Druk Heavy";
-  src: url("/fonts/Druk-Heavy-Trial.otf") format("opentype");
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
-
 :root {
   /* Color tokens */
   --color-background: #ffffff;

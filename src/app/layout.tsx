@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { roboto } from "./fonts";
-import { SiteShell } from "@/components/sections/SiteShell";
-import {
-  SITE_PREVIEW_COOKIE,
-  isUnderConstruction,
-  shouldGatePublicSite,
-} from "@/lib/site-mode";
+import { druk, roboto } from "./fonts";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import { isUnderConstruction } from "@/lib/site-mode";
+import { siteGraphJsonLd } from "@/lib/json-ld";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { PageTransitionProvider } from "@/components/ui/PageTransitionWipe";
 import "./globals.css";
 
@@ -47,27 +43,21 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: ["/ASSETS/LOGO_PNG/logo-tierra.png"],
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  robots: isUnderConstruction()
+    ? { index: false, follow: false }
+    : { index: true, follow: true },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const gated = isUnderConstruction()
-    ? shouldGatePublicSite((await cookies()).get(SITE_PREVIEW_COOKIE)?.value)
-    : false;
-
   return (
-    <html lang="en" className={roboto.variable}>
+    <html lang="en" className={`${roboto.variable} ${druk.variable}`}>
       <body className={`${roboto.className} min-h-screen bg-background font-roboto text-foreground`}>
-        <PageTransitionProvider>
-          {gated ? children : <SiteShell>{children}</SiteShell>}
-        </PageTransitionProvider>
+        <JsonLd data={siteGraphJsonLd()} />
+        <PageTransitionProvider>{children}</PageTransitionProvider>
       </body>
     </html>
   );

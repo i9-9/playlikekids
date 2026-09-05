@@ -1,7 +1,5 @@
-"use client";
-
 import Link from "next/link";
-import { AspectMedia } from "@/components/ui/AspectMedia";
+import { AspectStill } from "@/components/ui/AspectStill";
 import { CreditLabel } from "@/components/ui/CreditLabel";
 import { PlayMark } from "@/components/ui/PlayMark";
 import type { Credit } from "@/lib/sanity/types";
@@ -29,10 +27,10 @@ export function DirectorCard({ director, className = "" }: DirectorCardProps) {
       <Link href={href} scroll={false} className="link-poster group flex flex-col gap-2">
         <div className="relative">
           {director.thumbnailUrl ? (
-            <AspectMedia
-              kind="image"
+            <AspectStill
               src={director.thumbnailUrl}
               alt={`${director.name}${primaryCredit ? ` — ${primaryCredit.brand} ${primaryCredit.project}` : ""}`}
+              sizes="(max-width: 767px) 70vw, 20vw"
             />
           ) : (
             <div className="aspect-video w-full overflow-hidden bg-foreground/10" aria-hidden />
