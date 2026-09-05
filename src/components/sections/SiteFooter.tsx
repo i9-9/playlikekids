@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useRef, type MouseEvent, type ReactNode } from "react";
 import { Logo } from "@/components/ui/Logo";
 import { ProgressiveInvert } from "@/components/ui/ProgressiveInvert";
@@ -23,6 +24,16 @@ type SiteFooterProps = {
   underlay?: boolean;
 };
 
+function isModifiedClick(event: MouseEvent<HTMLAnchorElement>) {
+  return (
+    event.metaKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    event.altKey ||
+    event.button !== 0
+  );
+}
+
 export function SiteFooter({
   className = "",
   tone = "dark",
@@ -31,6 +42,7 @@ export function SiteFooter({
   center,
   underlay = false,
 }: SiteFooterProps) {
+  const pathname = usePathname();
   const footerRef = useRef<HTMLElement>(null);
   const { startWipe, isWiping, skipBand, anchor, bandDurationMs, riseDurationMs } =
     usePageTransition();
@@ -38,17 +50,23 @@ export function SiteFooter({
   const logoVariant = onDarkSurface ? "white" : "black";
   const wordmarkColor = onDarkSurface ? "text-background" : "text-foreground";
 
+  const handleLogoClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (pathname === "/") return;
+    if (isModifiedClick(event)) return;
+    event.preventDefault();
+    if (isWiping) return;
+    startWipe({
+      href: "/",
+      direction: "reverse",
+      anchor: footerRef.current
+        ? { kind: "rect", rect: footerRef.current.getBoundingClientRect() }
+        : { kind: "footer", ref: footerRef },
+    });
+  };
+
   const handleDirectorsClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (!wipeToDirectors) return;
-    if (
-      event.metaKey ||
-      event.ctrlKey ||
-      event.shiftKey ||
-      event.altKey ||
-      event.button !== 0
-    ) {
-      return;
-    }
+    if (isModifiedClick(event)) return;
     event.preventDefault();
     if (isWiping) return;
     startWipe({
@@ -74,6 +92,7 @@ export function SiteFooter({
       <Link
         href="/"
         aria-label="Play Like Kids home"
+        onClick={handleLogoClick}
         className="link-logo relative z-30 min-w-0 justify-self-start pointer-events-auto"
       >
         <ProgressiveInvert

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { motion, type Transition } from "motion/react";
 import type { ReactNode } from "react";
 import { VideoPlayer } from "@/components/ui/VideoPlayer";
 
@@ -29,6 +30,10 @@ export type AspectMediaProps = (AspectMediaImage | AspectMediaVimeo) & {
   sizes?: string;
   /** Drawn on the poster, inside the 16:9 frame. Hidden once playback starts. */
   overlay?: ReactNode;
+  /** Shared-element id for thumbnail → player morph. */
+  layoutId?: string;
+  layoutTransition?: Transition;
+  onLayoutAnimationComplete?: () => void;
 };
 
 /**
@@ -41,8 +46,8 @@ export function AspectMedia(props: AspectMediaProps) {
   const frameClassName = `relative w-full overflow-hidden bg-foreground/5 ${aspect} ${props.className ?? ""}`;
 
   if (props.kind === "image") {
-    return (
-      <div className={frameClassName}>
+    const image = (
+      <>
         <Image
           src={props.src}
           alt={props.alt}
@@ -53,7 +58,22 @@ export function AspectMedia(props: AspectMediaProps) {
           unoptimized={props.src.startsWith("https://")}
         />
         {props.overlay}
-      </div>
+      </>
+    );
+
+    if (!props.layoutId) {
+      return <div className={frameClassName}>{image}</div>;
+    }
+
+    return (
+      <motion.div
+        layoutId={props.layoutId}
+        className={frameClassName}
+        transition={props.layoutTransition}
+        onLayoutAnimationComplete={props.onLayoutAnimationComplete}
+      >
+        {image}
+      </motion.div>
     );
   }
 
@@ -68,6 +88,9 @@ export function AspectMedia(props: AspectMediaProps) {
       overlay={props.overlay}
       sizes={sizes}
       className={frameClassName}
+      layoutId={props.layoutId}
+      layoutTransition={props.layoutTransition}
+      onLayoutAnimationComplete={props.onLayoutAnimationComplete}
     />
   );
 }

@@ -275,40 +275,6 @@
   }
 }
 
-.player-volume {
-  appearance: none;
-  background: transparent;
-}
-
-.player-volume::-webkit-slider-runnable-track {
-  height: 2px;
-  background: rgb(255 255 255 / 0.35);
-  border-radius: 999px;
-}
-
-.player-volume::-webkit-slider-thumb {
-  appearance: none;
-  width: 10px;
-  height: 10px;
-  margin-top: -4px;
-  border-radius: 999px;
-  background: #fff;
-}
-
-.player-volume::-moz-range-track {
-  height: 2px;
-  background: rgb(255 255 255 / 0.35);
-  border-radius: 999px;
-}
-
-.player-volume::-moz-range-thumb {
-  width: 10px;
-  height: 10px;
-  border: 0;
-  border-radius: 999px;
-  background: #fff;
-}
-
 @keyframes fadeIn {
   from {
     opacity: 0;

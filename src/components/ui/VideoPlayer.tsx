@@ -2,7 +2,12 @@
 
 import Player from "@vimeo/player";
 import Image from "next/image";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+  type Transition,
+} from "motion/react";
 import {
   useCallback,
   useEffect,
@@ -21,6 +26,28 @@ const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2] as const;
 const SEEK_STEP = 5;
 const SEEK_STEP_LONG = 10;
 
+type DocPiP = {
+  requestWindow: (options?: { width?: number; height?: number }) => Promise<Window>;
+};
+
+function getDocPiP(): DocPiP | null {
+  return (
+    (window as Window & { documentPictureInPicture?: DocPiP }).documentPictureInPicture ??
+    null
+  );
+}
+
+function copyStylesTo(target: Document) {
+  for (const node of document.querySelectorAll("link[rel='stylesheet'], style")) {
+    target.head.appendChild(node.cloneNode(true));
+  }
+  try {
+    target.adoptedStyleSheets = [...document.adoptedStyleSheets];
+  } catch {
+    /* ignore */
+  }
+}
+
 type VideoPlayerProps = {
   videoId: string;
   privacyHash?: string | null;
@@ -31,6 +58,9 @@ type VideoPlayerProps = {
   overlay?: ReactNode;
   sizes?: string;
   className: string;
+  layoutId?: string;
+  layoutTransition?: Transition;
+  onLayoutAnimationComplete?: () => void;
 };
 
 export function VideoPlayer({
@@ -43,15 +73,20 @@ export function VideoPlayer({
   overlay,
   sizes = "(max-width: 768px) 100vw, 70vw",
   className,
+  layoutId,
+  layoutTransition,
+  onLayoutAnimationComplete,
 }: VideoPlayerProps) {
   const reduced = useReducedMotion();
   const fadeDuration = reduced ? 0 : 0.28;
   const posterHoldMs = reduced ? 0 : 200;
   const label = title ?? "Film";
 
+  const hostRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const playerRef = useRef<Player | null>(null);
+  const pipWindowRef = useRef<Window | null>(null);
   const idleRef = useRef<number>(0);
   const clickTimerRef = useRef<number>(0);
   const scrubbingRef = useRef(false);
@@ -92,6 +127,9 @@ export function VideoPlayer({
     setSpeedOpen(false);
     setPosterVisible(true);
     setChrome(true);
+    pipWindowRef.current?.close();
+    pipWindowRef.current = null;
+    setPip(false);
   }, [videoId, autoplay]);
 
   useEffect(() => {
@@ -135,8 +173,6 @@ export function VideoPlayer({
       setMuted(data.muted);
     };
     const onRate = (data: { playbackRate: number }) => setRate(data.playbackRate);
-    const onPipEnter = () => setPip(true);
-    const onPipLeave = () => setPip(false);
     const onFsChange = (data: { fullscreen: boolean }) =>
       setFullscreen(data.fullscreen);
 
@@ -147,8 +183,6 @@ export function VideoPlayer({
     player.on("progress", onProgress);
     player.on("volumechange", onVolume);
     player.on("playbackratechange", onRate);
-    player.on("enterpictureinpicture", onPipEnter);
-    player.on("leavepictureinpicture", onPipLeave);
     player.on("fullscreenchange", onFsChange);
 
     void player.ready().then(async () => {
@@ -185,8 +219,6 @@ export function VideoPlayer({
       player.off("progress", onProgress);
       player.off("volumechange", onVolume);
       player.off("playbackratechange", onRate);
-      player.off("enterpictureinpicture", onPipEnter);
-      player.off("leavepictureinpicture", onPipLeave);
       player.off("fullscreenchange", onFsChange);
       playerRef.current = null;
       const iframe = iframeRef.current;
@@ -230,8 +262,34 @@ export function VideoPlayer({
     return () => {
       window.clearTimeout(idleRef.current);
       window.clearTimeout(clickTimerRef.current);
+      pipWindowRef.current?.close();
     };
   }, []);
+
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    const host = hostRef.current;
+    if (!root || !host) return;
+
+    const pipWindow = pipWindowRef.current;
+    if (pipWindow && !pipWindow.closed) {
+      if (root.parentNode !== pipWindow.document.body) {
+        pipWindow.document.body.appendChild(root);
+      }
+      return;
+    }
+
+    if (pip) {
+      if (root.parentNode !== document.body) {
+        document.body.appendChild(root);
+      }
+      return;
+    }
+
+    if (root.parentNode !== host) {
+      host.appendChild(root);
+    }
+  }, [pip]);
 
   const togglePlay = useCallback(async () => {
     const player = playerRef.current;
@@ -287,11 +345,47 @@ export function VideoPlayer({
     setSpeedOpen(false);
   }, []);
 
-  const togglePip = useCallback(async () => {
-    const player = playerRef.current;
-    if (!player) return;
-    if (pip) await player.exitPictureInPicture();
-    else await player.requestPictureInPicture();
+  const togglePip = useCallback(() => {
+    if (pipWindowRef.current && !pipWindowRef.current.closed) {
+      pipWindowRef.current.close();
+      return;
+    }
+    if (pip) {
+      setPip(false);
+      return;
+    }
+
+    const root = rootRef.current;
+    const docPip = getDocPiP();
+    if (docPip && root) {
+      void docPip
+        .requestWindow({
+          width: Math.max(400, Math.round(root.clientWidth)),
+          height: Math.max(225, Math.round(root.clientHeight)),
+        })
+        .then((pipWindow) => {
+          copyStylesTo(pipWindow.document);
+          pipWindow.document.documentElement.style.height = "100%";
+          pipWindow.document.body.style.margin = "0";
+          pipWindow.document.body.style.height = "100%";
+          pipWindow.document.body.style.background = "#000";
+          pipWindow.document.body.appendChild(root);
+          pipWindowRef.current = pipWindow;
+          pipWindow.addEventListener("pagehide", () => {
+            pipWindowRef.current = null;
+            const host = hostRef.current;
+            if (host && rootRef.current && rootRef.current.parentNode !== host) {
+              host.appendChild(rootRef.current);
+            }
+            setPip(false);
+          });
+          setPip(true);
+        })
+        .catch(() => setPip(true));
+      return;
+    }
+
+    setPip(true);
   }, [pip]);
 
   const toggleFullscreen = useCallback(async () => {
@@ -387,6 +481,7 @@ export function VideoPlayer({
   const remaining = Math.max(0, duration - currentTime);
   const progress = duration ? currentTime / duration : 0;
   const buffered = duration ? bufferedEnd / duration : 0;
+  const volumeLevel = muted ? 0 : volume;
 
   const onScrubPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
     const bar = event.currentTarget;
@@ -406,6 +501,31 @@ export function VideoPlayer({
       const rect = bar.getBoundingClientRect();
       const ratio = Math.min(1, Math.max(0, (up.clientX - rect.left) / rect.width));
       void seekTo(ratio * duration);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      bumpChrome();
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  };
+
+  const onVolumePointer = (event: ReactPointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const bar = event.currentTarget;
+    bar.setPointerCapture(event.pointerId);
+    const pad = 5;
+    const apply = (clientX: number) => {
+      const rect = bar.getBoundingClientRect();
+      const usable = Math.max(1, rect.width - pad * 2);
+      void changeVolume((clientX - rect.left - pad) / usable);
+    };
+    apply(event.clientX);
+
+    const onMove = (move: PointerEvent) => apply(move.clientX);
+    const onUp = (up: PointerEvent) => {
+      bar.releasePointerCapture(up.pointerId);
+      apply(up.clientX);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       bumpChrome();
@@ -439,12 +559,33 @@ export function VideoPlayer({
     </AnimatePresence>
   );
 
+  const windowPip = Boolean(pipWindowRef.current && !pipWindowRef.current.closed);
+  const floatPip = pip && !windowPip;
+
   return (
-    <div
+    <div ref={hostRef} className={pip ? className : undefined}>
+    <motion.div
       ref={rootRef}
+      layoutId={layoutId}
+      transition={layoutTransition}
+      onLayoutAnimationComplete={onLayoutAnimationComplete}
       className={`${className} group/player bg-black outline-none ${
         !started && playable ? "cursor-pointer" : ""
       } ${started && !showChrome && playing ? "cursor-none" : ""}`}
+      style={
+        windowPip
+          ? { width: "100%", height: "100%", aspectRatio: "auto" }
+          : floatPip
+            ? {
+                position: "fixed",
+                right: 16,
+                bottom: 16,
+                zIndex: 80,
+                width: "min(22rem, calc(100vw - 2rem))",
+                aspectRatio: "16 / 9",
+              }
+            : undefined
+      }
       tabIndex={0}
       role="region"
       aria-label={label}
@@ -527,24 +668,55 @@ export function VideoPlayer({
           <Time>−{formatTime(remaining)}</Time>
 
           {hideVolume ? null : (
-            <div className="group/vol flex items-center">
+            <div className="group/vol flex h-8 items-center">
               <ControlButton
                 label={muted || volume === 0 ? "Unmute" : "Mute"}
                 onClick={() => void toggleMute()}
               >
-                {muted || volume === 0 ? <SpeakerOffIcon /> : <SpeakerIcon />}
+                {muted || volume === 0 ? (
+                  <SpeakerOffIcon />
+                ) : volume < 0.5 ? (
+                  <SpeakerLowIcon />
+                ) : (
+                  <SpeakerIcon />
+                )}
               </ControlButton>
-              <div className="w-0 overflow-hidden opacity-0 transition-[width,opacity] duration-200 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover/vol:w-16 group-hover/vol:opacity-100 group-focus-within/vol:w-16 group-focus-within/vol:opacity-100">
-                <input
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  value={muted ? 0 : volume}
+              <div className="w-0 overflow-hidden opacity-0 transition-[width,opacity] duration-200 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover/vol:w-[3.25rem] group-hover/vol:opacity-100 group-focus-within/vol:w-[3.25rem] group-focus-within/vol:opacity-100">
+                <div
+                  className="relative ml-1 h-8 w-12 cursor-pointer"
+                  onPointerDown={onVolumePointer}
+                  onKeyDown={(event) => {
+                    if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      void changeVolume(volume - 0.05);
+                    } else if (event.key === "ArrowRight" || event.key === "ArrowUp") {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      void changeVolume(volume + 0.05);
+                    }
+                  }}
+                  role="slider"
                   aria-label="Volume"
-                  onChange={(event) => void changeVolume(Number(event.target.value))}
-                  className="player-volume h-7 w-16 cursor-pointer"
-                />
+                  aria-valuemin={0}
+                  aria-valuemax={1}
+                  aria-valuenow={volumeLevel}
+                  aria-valuetext={`${Math.round(volumeLevel * 100)}%`}
+                  tabIndex={0}
+                >
+                  <div className="absolute inset-x-[5px] top-1/2 h-[2px] -translate-y-1/2 rounded-full bg-white/25">
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-full bg-white"
+                      style={{ width: `${volumeLevel * 100}%` }}
+                    />
+                  </div>
+                  <div
+                    className="absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
+                    style={{
+                      left: `calc(5px + ${volumeLevel} * (100% - 10px))`,
+                    }}
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -584,8 +756,7 @@ export function VideoPlayer({
 
           <ControlButton
             label={pip ? "Exit picture in picture" : "Picture in picture"}
-            onClick={() => void togglePip()}
-            className="hidden md:flex"
+            onClick={togglePip}
           >
             <PipIcon />
           </ControlButton>
@@ -601,6 +772,7 @@ export function VideoPlayer({
       ) : null}
 
       {poster}
+    </motion.div>
     </div>
   );
 }
@@ -667,20 +839,63 @@ function PauseIcon() {
   );
 }
 
-function SpeakerIcon() {
+function SpeakerGlyph({
+  waves = 2,
+  muted = false,
+}: {
+  waves?: 0 | 1 | 2;
+  muted?: boolean;
+}) {
   return (
-    <svg viewBox="0 0 24 24" className="size-[18px] fill-current" aria-hidden>
-      <path d="M4.8 9.2h3.1L12.2 6v12l-4.3-3.2H4.8V9.2zm9.3.4a3.2 3.2 0 0 1 0 4.8l-1-1.1a1.7 1.7 0 0 0 0-2.6l1-1.1zm2.3-2.2a6.3 6.3 0 0 1 0 9.2l-1.1-1.1a4.7 4.7 0 0 0 0-7l1.1-1.1z" />
+    <svg viewBox="0 0 24 24" className="size-[18px]" aria-hidden>
+      <path
+        d="M4.4 9.15h3L11.5 5.9v12.2l-4.1-3.25H4.4V9.15z"
+        className="fill-current stroke-current"
+        strokeWidth="0.9"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      {muted ? (
+        <path
+          d="M14.55 8.55 20.45 15.45M20.45 8.55 14.55 15.45"
+          className="fill-none stroke-current"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+      ) : (
+        <>
+          {waves >= 1 ? (
+            <path
+              d="M14.35 9.2q2.7 2.8 0 5.6"
+              className="fill-none stroke-current"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          ) : null}
+          {waves >= 2 ? (
+            <path
+              d="M17.15 6.9q4.55 5.1 0 10.2"
+              className="fill-none stroke-current"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          ) : null}
+        </>
+      )}
     </svg>
   );
 }
 
+function SpeakerIcon() {
+  return <SpeakerGlyph waves={2} />;
+}
+
+function SpeakerLowIcon() {
+  return <SpeakerGlyph waves={1} />;
+}
+
 function SpeakerOffIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-[18px] fill-current" aria-hidden>
-      <path d="M4.8 9.2h3.1L12.2 6v12l-4.3-3.2H4.8V9.2zm14.5-2.4 1.1 1.1-3 3 3 3-1.1 1.1-3-3-3 3-1.1-1.1 3-3-3-3 1.1-1.1 3 3 3-3z" />
-    </svg>
-  );
+  return <SpeakerGlyph muted />;
 }
 
 function PipIcon() {

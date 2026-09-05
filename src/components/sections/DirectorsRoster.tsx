@@ -100,6 +100,27 @@ function isDirectorsPath(path: string) {
   return path === "/directors" || path.startsWith("/directors/");
 }
 
+/** Clone the outgoing middle without live iframes or Motion projection transforms. */
+function snapshotMiddle(source: HTMLElement): string {
+  const clone = source.cloneNode(true) as HTMLElement;
+
+  clone.querySelectorAll("iframe").forEach((iframe) => {
+    const placeholder = document.createElement("div");
+    placeholder.className = iframe.className;
+    const style = iframe.getAttribute("style");
+    if (style) placeholder.setAttribute("style", style);
+    placeholder.style.backgroundColor = "#000";
+    iframe.replaceWith(placeholder);
+  });
+
+  clone.querySelectorAll("*").forEach((node) => {
+    if (!(node instanceof HTMLElement)) return;
+    if (node.style.transform) node.style.transform = "none";
+  });
+
+  return clone.innerHTML;
+}
+
 /**
  * Next.js replaces layout `children` in place, so React cannot keep the
  * outgoing director. Snapshot the middle DOM on click, collapse that
@@ -122,6 +143,9 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
   const isIndex = pathname === "/directors";
   const isProfile = isProfilePath(pathname);
   const busy = ghostHtml !== null;
+  const outgoingIsIndex = useRef(isIndex);
+  const showAsIndex = busy ? outgoingIsIndex.current : isIndex;
+  const showAsProfile = busy ? !outgoingIsIndex.current : isProfile;
 
   useEffect(() => {
     if (instant) return;
@@ -155,16 +179,16 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
       event.preventDefault();
       event.stopPropagation();
 
-      const html = source.innerHTML;
+      outgoingIsIndex.current = isIndex;
       flushSync(() => {
-        setGhostHtml(html);
+        setGhostHtml(snapshotMiddle(source));
       });
       router.push(url.pathname);
     };
 
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
-  }, [pathname, instant, ghostHtml, router]);
+  }, [pathname, instant, ghostHtml, router, isIndex]);
 
   useEffect(() => {
     if (ghostHtml) return;
@@ -173,7 +197,7 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
 
   return (
     <motion.main
-      className={`directors-roster ${isIndex ? "directors-roster--index" : "directors-roster--profile director-profile-page"}`}
+      className={`directors-roster ${showAsIndex ? "directors-roster--index" : "directors-roster--profile director-profile-page"}`}
       initial={false}
       animate={{ opacity: holdUnderWipe ? 0 : 1 }}
       transition={
@@ -186,8 +210,8 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
 
       <div className="directors-roster-heading">
         <NumberedListHeading
-          as={isIndex ? "h1" : "h2"}
-          href={isProfile ? "/directors" : undefined}
+          as={showAsIndex ? "h1" : "h2"}
+          href={showAsProfile ? "/directors" : undefined}
         />
       </div>
 
@@ -212,7 +236,7 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
           >
             <div
               className={
-                isProfilePath(pathname) ? "director-profile-stack" : undefined
+                showAsProfile ? "director-profile-stack" : undefined
               }
             >
               {children}
