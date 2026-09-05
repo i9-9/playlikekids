@@ -23,6 +23,7 @@ type DirectorsRosterProps = {
 
 const SLOT_TRANSITION = {
   gridTemplateRows: { duration: 0.5, ease: WIPE_EASE },
+  height: { duration: 0.5, ease: WIPE_EASE },
   opacity: { duration: 0.28, ease: WIPE_EASE },
 };
 
@@ -59,6 +60,34 @@ function CollapseGhost({
         className="directors-roster-slot-body pointer-events-none"
         dangerouslySetInnerHTML={{ __html: html }}
       />
+    </motion.div>
+  );
+}
+
+/**
+ * Collapse can interpolate 1fr → 0fr because the slot already has height.
+ * Expand cannot: 1fr of a 0-tall grid is still 0. Measure to `auto` instead.
+ */
+function ExpandSlot({
+  animateIn,
+  instant,
+  children,
+}: {
+  animateIn: boolean;
+  instant: boolean;
+  children: ReactNode;
+}) {
+  const [clip, setClip] = useState(animateIn);
+
+  return (
+    <motion.div
+      initial={animateIn ? { height: 0, opacity: 0 } : false}
+      animate={{ height: "auto", opacity: 1 }}
+      transition={instant ? { duration: 0 } : SLOT_TRANSITION}
+      style={clip ? { overflow: "hidden" } : undefined}
+      onAnimationComplete={() => setClip(false)}
+    >
+      {children}
     </motion.div>
   );
 }
@@ -168,13 +197,10 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
             }}
           />
         ) : (
-          <motion.div
+          <ExpandSlot
             key={pathname}
-            initial={
-              allowEnter.current && !instant ? { opacity: 0 } : false
-            }
-            animate={{ opacity: 1 }}
-            transition={instant ? { duration: 0 } : { duration: 0.28, ease: WIPE_EASE }}
+            animateIn={allowEnter.current && !instant}
+            instant={instant}
           >
             <div
               className={
@@ -183,7 +209,7 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
             >
               {children}
             </div>
-          </motion.div>
+          </ExpandSlot>
         )}
       </div>
 

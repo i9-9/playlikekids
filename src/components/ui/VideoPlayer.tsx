@@ -60,7 +60,6 @@ export function VideoPlayer({
   const [posterVisible, setPosterVisible] = useState(true);
   const [paused, setPaused] = useState(!autoplay);
   const [ended, setEnded] = useState(false);
-  const [buffering, setBuffering] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [bufferedEnd, setBufferedEnd] = useState(0);
@@ -136,8 +135,6 @@ export function VideoPlayer({
       setMuted(data.muted);
     };
     const onRate = (data: { playbackRate: number }) => setRate(data.playbackRate);
-    const onBufferStart = () => setBuffering(true);
-    const onBufferEnd = () => setBuffering(false);
     const onPipEnter = () => setPip(true);
     const onPipLeave = () => setPip(false);
     const onFsChange = (data: { fullscreen: boolean }) =>
@@ -150,8 +147,6 @@ export function VideoPlayer({
     player.on("progress", onProgress);
     player.on("volumechange", onVolume);
     player.on("playbackratechange", onRate);
-    player.on("bufferstart", onBufferStart);
-    player.on("bufferend", onBufferEnd);
     player.on("enterpictureinpicture", onPipEnter);
     player.on("leavepictureinpicture", onPipLeave);
     player.on("fullscreenchange", onFsChange);
@@ -160,13 +155,7 @@ export function VideoPlayer({
       if (cancelled) return;
       try {
         await player.setMuted(true);
-        const alreadyPlaying = !(await player.getPaused());
-        if (!alreadyPlaying) await player.play();
-        try {
-          await player.setMuted(false);
-        } catch {
-          /* stay muted if the browser still blocks sound */
-        }
+        if (await player.getPaused()) await player.play();
       } catch {
         if (!cancelled) setPaused(true);
       }
@@ -196,13 +185,17 @@ export function VideoPlayer({
       player.off("progress", onProgress);
       player.off("volumechange", onVolume);
       player.off("playbackratechange", onRate);
-      player.off("bufferstart", onBufferStart);
-      player.off("bufferend", onBufferEnd);
       player.off("enterpictureinpicture", onPipEnter);
       player.off("leavepictureinpicture", onPipLeave);
       player.off("fullscreenchange", onFsChange);
       playerRef.current = null;
-      void player.destroy().catch(() => undefined);
+      const iframe = iframeRef.current;
+      window.setTimeout(() => {
+        // destroy() removes the iframe from the DOM. Skip it while React
+        // still owns that node (Strict Mode remounts in the same tick).
+        if (iframeRef.current === iframe && iframe?.isConnected) return;
+        void player.destroy().catch(() => undefined);
+      }, 0);
     };
   }, [started, videoId]);
 
@@ -482,15 +475,6 @@ export function VideoPlayer({
         }
         onClick={onStageClick}
       />
-
-      {buffering && started && !paused ? (
-        <span
-          className="pointer-events-none absolute left-1/2 top-1/2 z-[2] -translate-x-1/2 -translate-y-1/2"
-          aria-hidden
-        >
-          <span className="block size-8 rounded-full border border-white/25 border-t-white/90 [animation:player-spin_0.8s_linear_infinite]" />
-        </span>
-      ) : null}
 
       {started ? (
         <div
