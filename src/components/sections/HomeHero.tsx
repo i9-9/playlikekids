@@ -18,6 +18,9 @@ export type HeroTransition = "fade" | "cut" | "wipe";
 const FADE_DURATION_S = 1.1;
 const INTRO_DURATION_S = 0.8;
 const WIPE_DURATION_S = 0.85;
+/** Hard cut has no overlap, so dwell shorter than fade/wipe. */
+const CUT_INTERVAL_MS = 2200;
+const DEFAULT_INTERVAL_MS = 4200;
 /** Full-bleed stills; default next/image q=75 looks soft at 100vw. */
 const HERO_IMAGE_QUALITY = 90;
 const STORAGE_KEY = "plk-home-slide-transition";
@@ -39,7 +42,7 @@ function isHeroTransition(value: string | null): value is HeroTransition {
  */
 export function HomeHero({
   images,
-  intervalMs = 4200,
+  intervalMs = DEFAULT_INTERVAL_MS,
   className = "",
 }: HomeHeroProps) {
   const frames = images;
@@ -57,6 +60,8 @@ export function HomeHero({
     return () => window.clearTimeout(id);
   }, []);
 
+  const cycleMs = transition === "cut" ? CUT_INTERVAL_MS : intervalMs;
+
   useEffect(() => {
     if (frames.length < 2) return;
 
@@ -66,7 +71,7 @@ export function HomeHero({
       if (intervalId !== undefined) return;
       intervalId = window.setInterval(() => {
         setIndex((current) => (current + 1) % frames.length);
-      }, intervalMs);
+      }, cycleMs);
     };
 
     const stop = () => {
@@ -87,7 +92,7 @@ export function HomeHero({
       stop();
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [frames.length, intervalMs]);
+  }, [frames.length, cycleMs]);
 
   const chooseTransition = useCallback((next: HeroTransition) => {
     setTransition(next);
@@ -133,9 +138,26 @@ export function HomeHero({
         className={`absolute inset-0 overflow-hidden ${transition === "wipe" ? "bg-foreground" : ""} ${className}`}
       >
         {transition === "cut" ? (
-          <div key={frame.url} className="absolute inset-0">
-            {slide}
-          </div>
+          frames.map((cutFrame, cutIndex) => (
+            <div
+              key={cutFrame.url}
+              className="absolute inset-0"
+              style={{
+                visibility: cutIndex === index ? "visible" : "hidden",
+              }}
+              aria-hidden={cutIndex !== index}
+            >
+              <Image
+                src={cutFrame.url}
+                alt={cutFrame.alt}
+                fill
+                priority={cutIndex === 0}
+                sizes="100vw"
+                quality={HERO_IMAGE_QUALITY}
+                className="object-cover"
+              />
+            </div>
+          ))
         ) : transition === "wipe" ? (
           <WipeTrack frames={frames} index={index} />
         ) : (

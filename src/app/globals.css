@@ -111,6 +111,13 @@
   flex-shrink: 0;
 }
 
+.directors-roster-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 1rem;
+}
+
 .directors-roster-list {
   padding-top: var(--roster-list-pad);
   transition: padding-top 0.5s var(--roster-ease);

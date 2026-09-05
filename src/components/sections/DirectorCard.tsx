@@ -16,9 +16,15 @@ export type DirectorCardData = {
 type DirectorCardProps = {
   director: DirectorCardData;
   className?: string;
+  /** First visible card is LCP on /directors (mobile carousel). */
+  priority?: boolean;
 };
 
-export function DirectorCard({ director, className = "" }: DirectorCardProps) {
+export function DirectorCard({
+  director,
+  className = "",
+  priority = false,
+}: DirectorCardProps) {
   const primaryCredit = director.credits[0];
   const href = `/directors/${director.slug}`;
 
@@ -31,6 +37,7 @@ export function DirectorCard({ director, className = "" }: DirectorCardProps) {
               src={director.thumbnailUrl}
               alt={`${director.name}${primaryCredit ? ` — ${primaryCredit.brand} ${primaryCredit.project}` : ""}`}
               sizes="(max-width: 767px) 70vw, 20vw"
+              priority={priority}
             />
           ) : (
             <div className="aspect-video w-full overflow-hidden bg-foreground/10" aria-hidden />

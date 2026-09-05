@@ -15,6 +15,7 @@ export type AspectMediaProps = {
   overlay?: ReactNode;
   /** Shared-element id for thumbnail → player morph. */
   layoutId?: string;
+  layout?: boolean;
   layoutTransition?: Transition;
   onLayoutAnimationComplete?: () => void;
 };
@@ -35,6 +36,7 @@ export function AspectMedia(props: AspectMediaProps) {
         fill
         sizes={sizes}
         priority={props.priority}
+        fetchPriority={props.priority ? "high" : undefined}
         className="object-cover"
       />
       {props.overlay}
@@ -47,6 +49,7 @@ export function AspectMedia(props: AspectMediaProps) {
 
   return (
     <motion.div
+      layout={props.layout}
       layoutId={props.layoutId}
       className={`${frameClassName} z-10`}
       style={{ zIndex: 10 }}

@@ -1,13 +1,18 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
+import { LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
+import {
+  CLOSE_DIRECTOR_PLAYER_EVENT,
+  DirectorPlayerChromeProvider,
+} from "@/components/sections/director-profile-events";
 import {
   NumberedList,
   NumberedListHeading,
@@ -25,6 +30,9 @@ const SLOT_TRANSITION = {
   height: { duration: 0.5, ease: WIPE_EASE },
   opacity: { duration: 0.28, ease: WIPE_EASE },
 };
+/** Same timing as the thumbnail → player morph in DirectorProfile. */
+const LIST_LAYOUT_EASE = [0.22, 0.61, 0.36, 1] as const;
+const LIST_LAYOUT = { duration: 0.64, ease: LIST_LAYOUT_EASE } as const;
 
 function CollapseGhost({
   html,
@@ -138,6 +146,7 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
   const [listHref, setListHref] = useState(
     isProfilePath(pathname) ? pathname : undefined,
   );
+  const [playerOpen, setPlayerOpen] = useState(false);
 
   const isIndex = pathname === "/directors";
   const isProfile = isProfilePath(pathname);
@@ -147,10 +156,8 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
   const showAsProfile = busy ? !outgoingIsIndex.current : isProfile;
 
   useEffect(() => {
-    if (instant) return;
-
     const onClick = (event: MouseEvent) => {
-      if (event.defaultPrevented || event.button !== 0) return;
+      if (event.button !== 0) return;
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
         return;
       }
@@ -170,7 +177,20 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
       }
       if (url.origin !== window.location.origin) return;
       if (!isDirectorsPath(url.pathname) || !isDirectorsPath(pathname)) return;
-      if (url.pathname === pathname) return;
+
+      if (url.pathname === pathname) {
+        if (
+          isProfilePath(pathname) &&
+          target.closest(".directors-roster-list")
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+          window.dispatchEvent(new Event(CLOSE_DIRECTOR_PLAYER_EVENT));
+        }
+        return;
+      }
+
+      if (event.defaultPrevented || instant) return;
 
       const source = middleRef.current;
       if (!source) return;
@@ -194,17 +214,33 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
     setListHref(isProfilePath(pathname) ? pathname : undefined);
   }, [pathname, ghostHtml]);
 
+  useEffect(() => {
+    setPlayerOpen(false);
+  }, [pathname]);
+
+  const chrome = useMemo(
+    () => ({ setPlayerOpen }),
+    [],
+  );
+
+  const activeDirector = items.find((item) => item.href === listHref);
+  const closePlayer = () => {
+    window.dispatchEvent(new Event(CLOSE_DIRECTOR_PLAYER_EVENT));
+  };
+
   return (
-    <motion.main
-      className={`directors-roster ${showAsIndex ? "directors-roster--index" : "directors-roster--profile director-profile-page"}`}
-      initial={false}
-      animate={{ opacity: holdUnderWipe ? 0 : 1 }}
-      transition={
-        holdUnderWipe || reduced
-          ? { duration: 0 }
-          : { duration: REVEAL_DURATION_MS / 1000, ease: WIPE_EASE }
-      }
-    >
+    <DirectorPlayerChromeProvider value={chrome}>
+      <LayoutGroup id="directors-roster">
+        <motion.main
+          className={`directors-roster ${showAsIndex ? "directors-roster--index" : "directors-roster--profile director-profile-page"}`}
+          initial={false}
+          animate={{ opacity: holdUnderWipe ? 0 : 1 }}
+          transition={
+            holdUnderWipe || reduced
+              ? { duration: 0 }
+              : { duration: REVEAL_DURATION_MS / 1000, ease: WIPE_EASE }
+          }
+        >
       <div className="directors-roster-end" aria-hidden />
 
       <div className="directors-roster-heading">
@@ -212,6 +248,20 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
           as={showAsIndex ? "h1" : "h2"}
           href={showAsProfile ? "/directors" : undefined}
         />
+        {playerOpen ? (
+          <button
+            type="button"
+            onClick={closePlayer}
+            className="shrink-0 text-right font-roboto text-body font-black uppercase tracking-wide transition-opacity duration-200 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-70 motion-reduce:duration-0"
+            aria-label={
+              activeDirector
+                ? `Back to ${activeDirector.label} films`
+                : "Back to director films"
+            }
+          >
+            BACK
+          </button>
+        ) : null}
       </div>
 
       <div
@@ -244,14 +294,18 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
         )}
       </div>
 
-      <div
+      <motion.div
+        layout="position"
         className="directors-roster-list"
+        transition={instant ? { duration: 0 } : LIST_LAYOUT}
         style={busy ? { pointerEvents: "none" } : undefined}
       >
         <NumberedList items={items} activeHref={listHref} />
-      </div>
+      </motion.div>
 
       <div className="directors-roster-end" aria-hidden />
-    </motion.main>
+        </motion.main>
+      </LayoutGroup>
+    </DirectorPlayerChromeProvider>
   );
 }

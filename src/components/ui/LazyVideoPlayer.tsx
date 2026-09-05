@@ -33,6 +33,7 @@ export function LazyVideoPlayer(props: VideoPlayerProps) {
   if (!Player) {
     return (
       <motion.div
+        layout={props.layout}
         layoutId={props.layoutId}
         className={`${props.className} z-10`}
         style={{ zIndex: 10 }}
@@ -45,6 +46,8 @@ export function LazyVideoPlayer(props: VideoPlayerProps) {
           fill
           sizes={props.sizes}
           quality={90}
+          priority
+          fetchPriority="high"
           className="object-cover"
         />
         {props.overlay}

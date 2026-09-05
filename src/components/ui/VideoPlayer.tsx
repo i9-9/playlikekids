@@ -59,6 +59,9 @@ export type VideoPlayerProps = {
   sizes?: string;
   className: string;
   layoutId?: string;
+  layout?: boolean;
+  /** Cover with poster and hide chrome before a shrink morph. */
+  retiring?: boolean;
   layoutTransition?: Transition;
   onLayoutAnimationComplete?: () => void;
 };
@@ -74,6 +77,8 @@ export function VideoPlayer({
   sizes = "(max-width: 768px) 100vw, 70vw",
   className,
   layoutId,
+  layout = false,
+  retiring = false,
   layoutTransition,
   onLayoutAnimationComplete,
 }: VideoPlayerProps) {
@@ -108,7 +113,10 @@ export function VideoPlayer({
   const [hideVolume, setHideVolume] = useState(false);
 
   const playing = started && !paused && !ended;
-  const showChrome = started && (chrome || paused || ended || speedOpen);
+  const showChrome = Boolean(
+    started && !retiring && (chrome || paused || ended || speedOpen),
+  );
+  const showPoster = posterVisible || retiring;
 
   const begin = useCallback(() => {
     if (started) return;
@@ -134,10 +142,16 @@ export function VideoPlayer({
 
   useEffect(() => {
     setPosterVisible(true);
-    if (!started) return;
+    if (!started || retiring) return;
     const id = window.setTimeout(() => setPosterVisible(false), posterHoldMs);
     return () => window.clearTimeout(id);
-  }, [started, videoId, posterHoldMs]);
+  }, [started, videoId, posterHoldMs, retiring]);
+
+  useEffect(() => {
+    if (!retiring) return;
+    setPosterVisible(true);
+    void playerRef.current?.pause();
+  }, [retiring]);
 
   useEffect(() => {
     const coarse = window.matchMedia("(pointer: coarse)").matches;
@@ -536,11 +550,11 @@ export function VideoPlayer({
 
   const poster = (
     <AnimatePresence mode="sync" initial={false}>
-      {posterVisible ? (
+      {showPoster ? (
         <motion.div
           key={videoId || thumbnailUrl}
           className="pointer-events-none absolute inset-0 z-[2]"
-          initial={{ opacity: 0 }}
+          initial={retiring ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: fadeDuration, ease: EASE }}
@@ -551,6 +565,8 @@ export function VideoPlayer({
             fill
             sizes={sizes}
             quality={90}
+            priority
+            fetchPriority="high"
             className="object-cover"
           />
           {overlay}
@@ -566,12 +582,15 @@ export function VideoPlayer({
     <div ref={hostRef} className={pip ? className : undefined}>
     <motion.div
       ref={rootRef}
+      layout={layout}
       layoutId={layoutId}
       transition={layoutTransition}
       onLayoutAnimationComplete={onLayoutAnimationComplete}
       className={`${className} group/player bg-black outline-none ${
-        !started && playable ? "cursor-pointer" : ""
-      } ${started && !showChrome && playing ? "cursor-none" : ""}`}
+        retiring ? "pointer-events-none" : ""
+      } ${!started && playable ? "cursor-pointer" : ""} ${
+        started && !showChrome && playing ? "cursor-none" : ""
+      }`}
       style={
         windowPip
           ? { width: "100%", height: "100%", aspectRatio: "auto" }
@@ -604,7 +623,9 @@ export function VideoPlayer({
             controls: false,
           })}
           title={label}
-          className="pointer-events-none absolute inset-0 h-full w-full border-0"
+          className={`pointer-events-none absolute inset-0 h-full w-full border-0 ${
+            retiring ? "opacity-0" : ""
+          }`}
           allow="autoplay; fullscreen; picture-in-picture"
           allowFullScreen
         />
