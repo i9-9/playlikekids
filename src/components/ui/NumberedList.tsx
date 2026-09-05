@@ -24,7 +24,7 @@ type NumberedListProps = {
 
 /** Shared number | name columns so “00 Directors” can sit on the same grid. */
 export const numberedListRowClassName =
-  "grid w-max max-w-full grid-cols-[var(--list-num)_auto] items-baseline gap-x-[var(--list-gap)]";
+  "grid w-max max-w-full grid-cols-[var(--list-num)_auto] items-baseline gap-x-[var(--list-gap)] whitespace-nowrap";
 
 export const numberedListTypeClassName =
   "font-roboto text-body font-medium uppercase tracking-wide";

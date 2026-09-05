@@ -37,7 +37,7 @@ function isHeroTransition(value: string | null): value is HeroTransition {
 }
 
 /**
- * Full-bleed hero that auto-cycles director first-film posters.
+ * Full-bleed hero that auto-cycles director film posters.
  * Transition is client-selectable (preview) until one is locked in.
  */
 export function HomeHero({

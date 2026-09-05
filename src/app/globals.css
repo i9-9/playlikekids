@@ -259,6 +259,17 @@
 }
 
 @layer utilities {
+  /*
+    @font-face is weight 900; body inherits 400. Chrome still uses Heavy.
+    Safari/iOS synthesizes a lighter face (reads as Bold) unless weight matches
+    and synthesis is off. html { antialiased } also thins Heavy on Core Text.
+  */
+  .font-druk {
+    font-weight: 900;
+    font-synthesis: none;
+    -webkit-font-smoothing: auto;
+  }
+
   .scrollbar-none {
     -ms-overflow-style: none;
     scrollbar-width: none;

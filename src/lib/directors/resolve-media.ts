@@ -53,6 +53,25 @@ async function resolveFirstFilm(
   return resolveFilm(firstCredit);
 }
 
+/** Still used on home and /directors. Gabriela’s frame is Huella, not her first listing. */
+function featuredStillCredit(director: Director): Credit | undefined {
+  if (director.slug === "gabriela-ortega") {
+    const huella = director.credits.find(
+      (credit) => credit.brand.trim().toLowerCase() === "huella",
+    );
+    if (huella) return huella;
+  }
+  return director.credits[0];
+}
+
+async function resolveFeaturedStill(
+  director: Director,
+): Promise<ResolvedFilm | null> {
+  const credit = featuredStillCredit(director);
+  if (!credit) return null;
+  return resolveFilm(credit);
+}
+
 export async function resolveDirectorFilms(
   director: Director,
 ): Promise<ResolvedFilm[]> {
@@ -61,24 +80,22 @@ export async function resolveDirectorFilms(
 
 const HERO_THUMB_WIDTH = 1920;
 
-/** Home hero: Vimeo poster of each director's first film, in roster order. */
+/** Home hero: Vimeo poster per director, in roster order. */
 export async function resolveHomeHeroImages(
   directors: Director[],
 ): Promise<HeroImage[]> {
   const frames = await Promise.all(
     directors.map(async (director) => {
-      const firstCredit = director.credits[0];
-      const videoId = firstCredit?.vimeoId
-        ? extractVimeoId(firstCredit.vimeoId)
-        : null;
-      if (!videoId || !firstCredit) return null;
+      const credit = featuredStillCredit(director);
+      const videoId = credit?.vimeoId ? extractVimeoId(credit.vimeoId) : null;
+      if (!videoId || !credit) return null;
 
-      const thumb = await getVimeoThumbnail(videoId, firstCredit.vimeoHash, {
+      const thumb = await getVimeoThumbnail(videoId, credit.vimeoHash, {
         width: HERO_THUMB_WIDTH,
       });
       if (!thumb?.thumbnailUrl) return null;
 
-      const title = [firstCredit.brand, firstCredit.project]
+      const title = [credit.brand, credit.project]
         .filter(Boolean)
         .join(" — ");
 
@@ -136,13 +153,15 @@ export async function toDirectorCards(
 ): Promise<DirectorCardData[]> {
   return Promise.all(
     directors.map(async (director) => {
-      const film = await resolveFirstFilm(director);
+      const film = await resolveFeaturedStill(director);
+      const featuredCredit = featuredStillCredit(director) ?? null;
 
       return {
         name: director.name,
         slug: director.slug,
         order: director.order,
         credits: director.credits,
+        featuredCredit,
         videoId: null,
         thumbnailUrl:
           film?.thumbnailUrl ??

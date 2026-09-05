@@ -9,6 +9,8 @@ export type DirectorCardData = {
   slug: string;
   order: number;
   credits: Credit[];
+  /** Film shown on the roster thumbnail (Huella for Gabriela). */
+  featuredCredit: Credit | null;
   thumbnailUrl: string | null;
   videoId: string | null;
 };
@@ -25,7 +27,7 @@ export function DirectorCard({
   className = "",
   priority = false,
 }: DirectorCardProps) {
-  const primaryCredit = director.credits[0];
+  const featuredCredit = director.featuredCredit ?? director.credits[0];
   const href = `/directors/${director.slug}`;
 
   return (
@@ -35,7 +37,7 @@ export function DirectorCard({
           {director.thumbnailUrl ? (
             <AspectStill
               src={director.thumbnailUrl}
-              alt={`${director.name}${primaryCredit ? ` — ${primaryCredit.brand} ${primaryCredit.project}` : ""}`}
+              alt={`${director.name}${featuredCredit ? ` — ${featuredCredit.brand} ${featuredCredit.project}` : ""}`}
               sizes="(max-width: 767px) 70vw, 20vw"
               priority={priority}
             />
@@ -51,9 +53,9 @@ export function DirectorCard({
           <span className="font-medium transition-opacity ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:opacity-70">
             {director.name}
           </span>
-          {primaryCredit ? (
+          {featuredCredit ? (
             <p className="mt-0.5 font-medium">
-              <CreditLabel credit={primaryCredit} />
+              <CreditLabel credit={featuredCredit} />
             </p>
           ) : null}
         </div>
