@@ -98,18 +98,20 @@ export function DirectorProfile({ director }: DirectorProfileProps) {
         key={director.slug}
         className="director-profile-credits flex flex-col gap-[var(--credit-name-gap)]"
       >
-        <h1 className="min-w-0 w-full text-center font-roboto text-director-name font-medium uppercase leading-none tracking-normal md:w-[var(--list-indent)] md:text-right md:font-normal">
+        <h1 className="min-w-0 w-full font-roboto text-director-name font-medium uppercase leading-none tracking-normal md:w-[var(--list-indent)] md:font-normal">
           {playing ? (
             <button
               type="button"
               onClick={() => setPlaying(false)}
-              className="w-full uppercase tracking-inherit transition-opacity duration-200 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-70 motion-reduce:duration-0"
+              className="block w-full text-center uppercase tracking-inherit transition-opacity duration-200 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-70 motion-reduce:duration-0 md:text-right"
               aria-label={`Back to ${director.name} films`}
             >
               {director.name}
             </button>
           ) : (
-            director.name
+            <span className="block w-full text-center md:text-right">
+              {director.name}
+            </span>
           )}
         </h1>
         {playing && films.length > 0 ? (

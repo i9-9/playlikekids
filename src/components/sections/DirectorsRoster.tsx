@@ -14,7 +14,7 @@ import {
   NumberedListHeading,
   type NumberedListItem,
 } from "@/components/ui/NumberedList";
-import { WIPE_EASE, usePageTransition } from "@/components/ui/PageTransitionWipe";
+import { WIPE_EASE, REVEAL_DURATION_MS, usePageTransition } from "@/components/ui/PageTransitionWipe";
 
 type DirectorsRosterProps = {
   items: NumberedListItem[];
@@ -109,8 +109,9 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
   const pathname = usePathname();
   const router = useRouter();
   const reduced = useReducedMotion();
-  const { isWiping } = usePageTransition();
+  const { isWiping, isRevealing } = usePageTransition();
   const instant = Boolean(reduced || isWiping);
+  const holdUnderWipe = Boolean(isWiping && !isRevealing && !reduced);
   const middleRef = useRef<HTMLDivElement>(null);
   const allowEnter = useRef(false);
   const [ghostHtml, setGhostHtml] = useState<string | null>(null);
@@ -171,8 +172,15 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
   }, [pathname, ghostHtml]);
 
   return (
-    <main
+    <motion.main
       className={`directors-roster ${isIndex ? "directors-roster--index" : "directors-roster--profile director-profile-page"}`}
+      initial={false}
+      animate={{ opacity: holdUnderWipe ? 0 : 1 }}
+      transition={
+        holdUnderWipe || reduced
+          ? { duration: 0 }
+          : { duration: REVEAL_DURATION_MS / 1000, ease: WIPE_EASE }
+      }
     >
       <div className="directors-roster-end" aria-hidden />
 
@@ -221,6 +229,6 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
       </div>
 
       <div className="directors-roster-end" aria-hidden />
-    </main>
+    </motion.main>
   );
 }

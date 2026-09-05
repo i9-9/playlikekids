@@ -1,6 +1,11 @@
 "use client";
 
-import { motion, useMotionValue, type MotionValue } from "motion/react";
+import {
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  type MotionValue,
+} from "motion/react";
 import {
   createContext,
   useCallback,
@@ -38,6 +43,9 @@ export type WipeRect = {
 type PageTransitionContextValue = {
   startWipe: (options: WipeOptions) => void;
   isWiping: boolean;
+  /** Destination painted; white cover is dissolving. */
+  isRevealing: boolean;
+  finishReveal: () => void;
   skipBand: boolean;
   anchor: TransitionAnchor | null;
   bandDurationMs: number;
@@ -56,6 +64,7 @@ const PageTransitionContext = createContext<PageTransitionContextValue | null>(
 
 export const BAND_DURATION_MS = 700;
 export const RISE_DURATION_MS = 650;
+export const REVEAL_DURATION_MS = 480;
 export const WIPE_EASE: [number, number, number, number] = [0.76, 0, 0.24, 1];
 
 type PageTransitionProviderProps = {
@@ -66,6 +75,7 @@ function dismissWipe(
   destinationRef: { current: string | null },
   didPushRef: { current: boolean },
   setIsWiping: (value: boolean) => void,
+  setIsRevealing: (value: boolean) => void,
   setSkipBand: (value: boolean) => void,
   setAnchor: (anchor: TransitionAnchor | null) => void,
   setRiseDurationMs: (ms: number) => void,
@@ -73,6 +83,7 @@ function dismissWipe(
   destinationRef.current = null;
   didPushRef.current = false;
   setIsWiping(false);
+  setIsRevealing(false);
   setSkipBand(false);
   setAnchor(null);
   setRiseDurationMs(RISE_DURATION_MS);
@@ -109,7 +120,9 @@ export function PageTransitionProvider({
 }: PageTransitionProviderProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const reduced = useReducedMotion();
   const [isWiping, setIsWiping] = useState(false);
+  const [isRevealing, setIsRevealing] = useState(false);
   const [skipBand, setSkipBand] = useState(false);
   const [anchor, setAnchor] = useState<TransitionAnchor | null>(null);
   const [riseDurationMs, setRiseDurationMs] = useState(RISE_DURATION_MS);
@@ -117,6 +130,18 @@ export function PageTransitionProvider({
   const wipeRect = useMotionValue<WipeRect>(EMPTY_WIPE_RECT);
   const destinationRef = useRef<string | null>(null);
   const didPushRef = useRef(false);
+
+  const finishReveal = useCallback(() => {
+    dismissWipe(
+      destinationRef,
+      didPushRef,
+      setIsWiping,
+      setIsRevealing,
+      setSkipBand,
+      setAnchor,
+      setRiseDurationMs,
+    );
+  }, []);
 
   const startWipe = useCallback(
     ({
@@ -132,6 +157,7 @@ export function PageTransitionProvider({
       setSkipBand(nextSkipBand);
       setAnchor(nextAnchor);
       setRiseDurationMs(nextRiseDurationMs);
+      setIsRevealing(false);
       setIsWiping(true);
       router.prefetch(href);
     },
@@ -172,14 +198,11 @@ export function PageTransitionProvider({
     let inner = 0;
     const outer = window.requestAnimationFrame(() => {
       inner = window.requestAnimationFrame(() => {
-        dismissWipe(
-          destinationRef,
-          didPushRef,
-          setIsWiping,
-          setSkipBand,
-          setAnchor,
-          setRiseDurationMs,
-        );
+        if (reduced) {
+          finishReveal();
+          return;
+        }
+        setIsRevealing(true);
       });
     });
 
@@ -187,31 +210,37 @@ export function PageTransitionProvider({
       window.cancelAnimationFrame(outer);
       window.cancelAnimationFrame(inner);
     };
-  }, [isWiping, pathname]);
+  }, [isWiping, pathname, reduced, finishReveal]);
+
+  useEffect(() => {
+    if (!isRevealing) return;
+    const timer = window.setTimeout(() => {
+      finishReveal();
+    }, REVEAL_DURATION_MS);
+    return () => window.clearTimeout(timer);
+  }, [isRevealing, finishReveal]);
 
   useEffect(() => {
     if (!isWiping) return;
 
     const fallbackMs =
-      (skipBand ? 0 : BAND_DURATION_MS) + riseDurationMs + 8000;
+      (skipBand ? 0 : BAND_DURATION_MS) +
+      riseDurationMs +
+      REVEAL_DURATION_MS +
+      8000;
     const timer = window.setTimeout(() => {
-      dismissWipe(
-        destinationRef,
-        didPushRef,
-        setIsWiping,
-        setSkipBand,
-        setAnchor,
-        setRiseDurationMs,
-      );
+      finishReveal();
     }, fallbackMs);
 
     return () => window.clearTimeout(timer);
-  }, [isWiping, skipBand, riseDurationMs]);
+  }, [isWiping, skipBand, riseDurationMs, finishReveal]);
 
   const value = useMemo(
     () => ({
       startWipe,
       isWiping,
+      isRevealing,
+      finishReveal,
       skipBand,
       anchor,
       bandDurationMs: skipBand ? 0 : BAND_DURATION_MS,
@@ -219,7 +248,17 @@ export function PageTransitionProvider({
       wipeProgress,
       wipeRect,
     }),
-    [isWiping, skipBand, anchor, riseDurationMs, startWipe, wipeProgress, wipeRect],
+    [
+      isWiping,
+      isRevealing,
+      finishReveal,
+      skipBand,
+      anchor,
+      riseDurationMs,
+      startWipe,
+      wipeProgress,
+      wipeRect,
+    ],
   );
 
   return (
@@ -264,7 +303,7 @@ export function PageTransitionWipe({
   anchor,
   className = "",
 }: PageTransitionWipeProps) {
-  const { wipeProgress, wipeRect } = usePageTransition();
+  const { wipeProgress, wipeRect, isRevealing } = usePageTransition();
   const wipeRef = useRef<HTMLDivElement>(null);
   const [phase, setPhase] = useState<WipePhase>("band");
   const [bandTop, setBandTop] = useState(0);
@@ -352,37 +391,58 @@ export function PageTransitionWipe({
         height: bandHeight,
         scaleX: skipBand ? 1 : 0,
         scaleY: 1,
+        opacity: 1,
       }}
       animate={
-        isRise
+        isRevealing
           ? {
               top: 0,
               height: "100vh",
               scaleX: 1,
               scaleY: 1,
+              opacity: 0,
             }
-          : {
-              top: bandTop,
-              height: bandHeight,
-              scaleX: 1,
-              scaleY: 1,
-            }
+          : isRise
+            ? {
+                top: 0,
+                height: "100vh",
+                scaleX: 1,
+                scaleY: 1,
+                opacity: 1,
+              }
+            : {
+                top: bandTop,
+                height: bandHeight,
+                scaleX: 1,
+                scaleY: 1,
+                opacity: 1,
+              }
       }
       transition={
-        isRise
+        isRevealing
           ? {
-              duration: riseDurationMs / 1000,
-              ease: WIPE_EASE,
-            }
-          : {
-              scaleX: {
-                duration: bandDurationMs / 1000,
-                ease: WIPE_EASE,
-              },
+              opacity: { duration: REVEAL_DURATION_MS / 1000, ease: WIPE_EASE },
               top: { duration: 0 },
               height: { duration: 0 },
+              scaleX: { duration: 0 },
               scaleY: { duration: 0 },
             }
+          : isRise
+            ? {
+                duration: riseDurationMs / 1000,
+                ease: WIPE_EASE,
+                opacity: { duration: 0 },
+              }
+            : {
+                scaleX: {
+                  duration: bandDurationMs / 1000,
+                  ease: WIPE_EASE,
+                },
+                top: { duration: 0 },
+                height: { duration: 0 },
+                scaleY: { duration: 0 },
+                opacity: { duration: 0 },
+              }
       }
       onUpdate={(latest) => {
         if (typeof latest.scaleX === "number") {
