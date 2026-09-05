@@ -12,6 +12,7 @@
     "lint": "eslint",
     "test": "node --import tsx --test src/lib/credits.test.ts src/lib/vimeo/thumbnail.test.ts",
     "seed": "node --env-file=.env.local --import tsx scripts/seed-directors.ts",
+    "sanity:credit-keys": "node --env-file=.env.local --import tsx scripts/ensure-credit-keys.ts",
     "sanity:login": "sanity login --provider google",
     "sanity:init": "sanity init --env .env.local --project-name \"Play Like Kids\" --dataset production --typescript --nextjs-embed-studio --nextjs-append-env -y"
   },

@@ -4,7 +4,7 @@ import {
   festivalTag,
   formatCreditLabel,
   preservesBrandCase,
-} from "./credits.ts";
+} from "./credits";
 
 test("festivalTag shortens Sundance and requires name + year", () => {
   assert.equal(festivalTag({ festival: null }), null);

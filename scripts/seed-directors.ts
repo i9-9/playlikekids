@@ -43,7 +43,8 @@ async function main() {
       name: director.name,
       slug: { _type: "slug", current: director.slug },
       order: director.order,
-      credits: director.credits.map((credit) => ({
+      credits: director.credits.map((credit, index) => ({
+        _key: `credit-${director.slug}-${index + 1}`,
         _type: "credit",
         brand: credit.brand,
         project: credit.project,

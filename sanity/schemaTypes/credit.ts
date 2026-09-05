@@ -1,9 +1,11 @@
+import { PlayIcon } from "@sanity/icons/Play";
 import { defineField, defineType } from "sanity";
 
 export const credit = defineType({
   name: "credit",
   title: "Credit",
   type: "object",
+  icon: PlayIcon,
   fields: [
     defineField({
       name: "brand",

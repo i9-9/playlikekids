@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { extractVimeoHash, extractVimeoId } from "./thumbnail.ts";
+import { extractVimeoHash, extractVimeoId } from "./thumbnail";
 
 test("extractVimeoId accepts numeric IDs and watch URLs", () => {
   assert.equal(extractVimeoId("1216249852"), "1216249852");
