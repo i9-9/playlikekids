@@ -271,7 +271,7 @@ function HeroTransitionPicker({
       <div
         role="radiogroup"
         aria-label="Transición de las imágenes del home"
-        className="flex items-center gap-3"
+        className="flex flex-col items-center gap-2"
       >
         {TRANSITION_OPTIONS.map((option) => {
           const selected = option.id === value;
