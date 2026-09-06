@@ -24,6 +24,7 @@
   --text-director-name: clamp(1.125rem, 1.5vw, 1.375rem);
   /* Footer lockup — logo box height. Directors is sized so Druk cap-height matches it. */
   --footer-lockup: 2.5rem;
+  --footer-height: calc(2.5rem + 1.25rem); /* lockup + pt-5 */
   --druk-directors-ink: 0.756;
   --druk-directors-ink-top: 0.0625;
   --text-wordmark-footer: calc(var(--footer-lockup) / var(--druk-directors-ink));
@@ -56,12 +57,14 @@
     --list-indent: 20%;
     --list-gap: 8rem;
     --footer-lockup: 4rem;
+    --footer-height: calc(4rem + 1rem); /* lockup + md:pt-4 */
   }
 }
 
 @media (min-width: 1024px) {
   :root {
     --footer-lockup: 5rem;
+    --footer-height: calc(5rem + 1rem); /* lockup + md:pt-4 */
   }
 }
 
