@@ -79,7 +79,7 @@ export function SiteFooter({
   return (
     <footer
       ref={footerRef}
-      className={`relative grid w-full grid-cols-2 items-center gap-3 overflow-hidden bg-transparent pt-5 md:grid-cols-[1fr_auto_1fr] md:gap-4 md:pt-4 ${underlay ? "z-0 max-md:z-20 md:pointer-events-none" : "z-20"} ${className}`}
+      className={`relative grid w-full grid-cols-2 items-center gap-3 bg-transparent pt-5 md:grid-cols-[1fr_auto_1fr] md:gap-4 md:pt-4 ${underlay ? "z-0 max-md:z-20 md:pointer-events-none" : "z-20"} ${className}`}
     >
       <PageTransitionWipe
         active={isWiping}
@@ -105,7 +105,7 @@ export function SiteFooter({
       </Link>
 
       {center ? (
-        <div className="relative z-30 col-span-2 min-w-0 max-w-full justify-self-center self-center md:col-span-1 md:col-start-2">
+        <div className="relative z-30 col-span-2 min-w-0 max-w-full overflow-x-auto scrollbar-none justify-self-center self-center md:col-span-1 md:col-start-2">
           {center}
         </div>
       ) : (
@@ -116,17 +116,17 @@ export function SiteFooter({
         href="/directors"
         scroll={false}
         onClick={handleDirectorsClick}
-        className={`link-wordmark relative z-30 flex h-lockup min-w-0 max-w-full items-start justify-self-end overflow-visible col-start-2 row-start-1 pointer-events-auto md:col-start-3 ${wordmarkColor}`}
+        className={`link-wordmark relative z-30 flex h-lockup min-w-0 max-w-full items-start justify-self-end col-start-2 row-start-1 pointer-events-auto md:col-start-3 ${wordmarkColor}`}
         aria-label="Directors"
       >
         <ProgressiveInvert
           light={
-            <Wordmark size="footer" className="wordmark-lockup block text-right" />
+            <Wordmark size="footer" className="wordmark-lockup block text-right max-w-full" />
           }
           dark={
             <Wordmark
               size="footer"
-              className="wordmark-lockup block text-right text-foreground"
+              className="wordmark-lockup block text-right text-foreground max-w-full"
             />
           }
         />
