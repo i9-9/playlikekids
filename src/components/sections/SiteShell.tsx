@@ -38,14 +38,14 @@ function SiteShellFrame({
   return (
     <div className="relative flex h-dvh min-h-0 flex-col px-gutter py-chrome">
       <SiteHeader tone={headerTone} className="relative z-30 shrink-0" />
-      <div className="scrollbar-none z-10 flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden pb-[var(--footer-height)]">
+      <div className="scrollbar-none z-10 flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
         {children}
       </div>
       <SiteFooter
         tone={footerTone}
         wipeToDirectors={isHome}
         center={center}
-        className="sticky bottom-0 shrink-0"
+        className="shrink-0"
       />
     </div>
   );
