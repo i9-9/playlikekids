@@ -79,7 +79,7 @@ export function SiteFooter({
   return (
     <footer
       ref={footerRef}
-      className={`relative grid w-full grid-cols-2 items-center gap-3 bg-transparent pt-5 md:grid-cols-[1fr_auto_1fr] md:gap-4 md:pt-4 ${underlay ? "z-0 max-md:z-20 md:pointer-events-none" : "z-20"} ${className}`}
+      className={`relative grid w-full grid-cols-2 items-center gap-3 overflow-hidden bg-transparent pt-5 md:grid-cols-[1fr_auto_1fr] md:gap-4 md:pt-4 ${underlay ? "z-0 max-md:z-20 md:pointer-events-none" : "z-20"} ${className}`}
     >
       <PageTransitionWipe
         active={isWiping}
@@ -105,7 +105,7 @@ export function SiteFooter({
       </Link>
 
       {center ? (
-        <div className="relative z-30 col-span-2 justify-self-center self-center md:col-span-1 md:col-start-2">
+        <div className="relative z-30 col-span-2 min-w-0 max-w-full justify-self-center self-center md:col-span-1 md:col-start-2">
           {center}
         </div>
       ) : (
