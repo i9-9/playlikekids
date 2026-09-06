@@ -2,8 +2,7 @@
 
 import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FooterCenter } from "@/components/sections/FooterSlot";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { HeroImage } from "@/lib/sanity/types";
 
 type HomeHeroProps = {
@@ -99,22 +98,12 @@ export function HomeHero({
     window.localStorage.setItem(STORAGE_KEY, next);
   }, []);
 
-  const picker = useMemo(
-    () => (
-      <HeroTransitionPicker value={transition} onChange={chooseTransition} />
-    ),
-    [transition, chooseTransition],
-  );
-
   if (frames.length === 0) {
     return (
-      <>
-        <FooterCenter>{picker}</FooterCenter>
-        <div
-          className={`absolute inset-0 bg-foreground ${className}`}
-          aria-hidden
-        />
-      </>
+      <div
+        className={`absolute inset-0 bg-foreground ${className}`}
+        aria-hidden
+      />
     );
   }
 
@@ -132,53 +121,51 @@ export function HomeHero({
   );
 
   return (
-    <>
-      <FooterCenter>{picker}</FooterCenter>
-      <div
-        className={`absolute inset-0 overflow-hidden ${transition === "wipe" ? "bg-foreground" : ""} ${className}`}
-      >
-        {transition === "cut" ? (
-          frames.map((cutFrame, cutIndex) => (
-            <div
-              key={cutFrame.url}
-              className="absolute inset-0"
-              style={{
-                visibility: cutIndex === index ? "visible" : "hidden",
-              }}
-              aria-hidden={cutIndex !== index}
-            >
-              <Image
-                src={cutFrame.url}
-                alt={cutFrame.alt}
-                fill
-                priority={cutIndex === 0}
-                sizes="100vw"
-                quality={HERO_IMAGE_QUALITY}
-                className="object-cover"
-              />
-            </div>
-          ))
-        ) : transition === "wipe" ? (
-          <WipeTrack frames={frames} index={index} />
-        ) : (
-          <AnimatePresence mode="sync" initial={false}>
-            <motion.div
-              key={frame.url}
-              className="absolute inset-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{
-                duration: intro ? INTRO_DURATION_S : FADE_DURATION_S,
-                ease: "easeInOut",
-              }}
-            >
-              {slide}
-            </motion.div>
-          </AnimatePresence>
-        )}
-      </div>
-    </>
+    <div
+      className={`absolute inset-0 overflow-hidden ${transition === "wipe" ? "bg-foreground" : ""} ${className}`}
+    >
+      {transition === "cut" ? (
+        frames.map((cutFrame, cutIndex) => (
+          <div
+            key={cutFrame.url}
+            className="absolute inset-0"
+            style={{
+              visibility: cutIndex === index ? "visible" : "hidden",
+            }}
+            aria-hidden={cutIndex !== index}
+          >
+            <Image
+              src={cutFrame.url}
+              alt={cutFrame.alt}
+              fill
+              priority={cutIndex === 0}
+              sizes="100vw"
+              quality={HERO_IMAGE_QUALITY}
+              className="object-cover"
+            />
+          </div>
+        ))
+      ) : transition === "wipe" ? (
+        <WipeTrack frames={frames} index={index} />
+      ) : (
+        <AnimatePresence mode="sync" initial={false}>
+          <motion.div
+            key={frame.url}
+            className="absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: intro ? INTRO_DURATION_S : FADE_DURATION_S,
+              ease: "easeInOut",
+            }}
+          >
+            {slide}
+          </motion.div>
+        </AnimatePresence>
+      )}
+      <HeroTransitionPicker value={transition} onChange={chooseTransition} />
+    </div>
   );
 }
 
@@ -264,33 +251,28 @@ function HeroTransitionPicker({
   onChange: (next: HeroTransition) => void;
 }) {
   return (
-    <div className="pointer-events-auto flex flex-col items-center gap-1.5 font-roboto text-meta font-bold uppercase leading-none tracking-wide text-background">
-      <p className="font-medium tracking-[0.18em] opacity-70">
-        Transición · preview
-      </p>
-      <div
-        role="radiogroup"
-        aria-label="Transición de las imágenes del home"
-        className="flex flex-col items-center gap-2"
-      >
-        {TRANSITION_OPTIONS.map((option) => {
-          const selected = option.id === value;
-          return (
-            <button
-              key={option.id}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              onClick={() => onChange(option.id)}
-              className={`cursor-pointer tracking-wide transition-opacity duration-200 ease-[cubic-bezier(0.76,0,0.24,1)] ${
-                selected ? "opacity-100" : "opacity-50 hover:opacity-80"
-              }`}
-            >
-              {option.label}
-            </button>
-          );
-        })}
-      </div>
+    <div
+      role="radiogroup"
+      aria-label="Transición de las imágenes del home"
+      className="pointer-events-auto fixed right-6 top-1/2 z-40 flex -translate-y-1/2 flex-col gap-1.5 font-roboto text-[0.625rem] font-medium uppercase leading-none tracking-wider text-background/80"
+    >
+      {TRANSITION_OPTIONS.map((option) => {
+        const selected = option.id === value;
+        return (
+          <button
+            key={option.id}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            onClick={() => onChange(option.id)}
+            className={`cursor-pointer transition-all duration-200 ease-[cubic-bezier(0.76,0,0.24,1)] ${
+              selected ? "font-bold opacity-100 scale-110" : "opacity-40 hover:opacity-70"
+            }`}
+          >
+            {option.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
