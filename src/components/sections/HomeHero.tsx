@@ -254,7 +254,7 @@ function HeroTransitionPicker({
     <div
       role="radiogroup"
       aria-label="Transición de las imágenes del home"
-      className="pointer-events-auto fixed right-6 top-1/2 z-40 flex -translate-y-1/2 flex-col gap-1.5 font-roboto text-[0.625rem] font-medium uppercase leading-none tracking-wider text-background/80"
+      className="pointer-events-auto fixed right-6 top-1/2 z-40 flex -translate-y-1/2 flex-col gap-1.5 font-roboto text-[0.625rem] font-medium uppercase leading-none tracking-wider text-white"
     >
       {TRANSITION_OPTIONS.map((option) => {
         const selected = option.id === value;
