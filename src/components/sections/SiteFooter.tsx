@@ -79,7 +79,7 @@ export function SiteFooter({
   return (
     <footer
       ref={footerRef}
-      className={`relative grid w-full grid-cols-2 items-center gap-3 bg-transparent pt-5 md:grid-cols-[1fr_auto_1fr] md:gap-4 md:pt-4 ${underlay ? "z-0 max-md:z-20 md:pointer-events-none" : "z-20"} ${className}`}
+      className={`relative grid w-full grid-cols-2 items-center gap-3 bg-transparent pt-[var(--footer-pad-top)] md:grid-cols-[1fr_auto_1fr] md:gap-4 ${underlay ? "z-0 max-md:z-20 md:pointer-events-none" : "z-20"} ${className}`}
     >
       <PageTransitionWipe
         active={isWiping}
@@ -93,7 +93,7 @@ export function SiteFooter({
         href="/"
         aria-label="Play Like Kids home"
         onClick={handleLogoClick}
-        className="link-logo relative z-30 min-w-0 justify-self-start pointer-events-auto"
+        className="link-logo relative z-30 flex h-lockup min-w-0 items-start justify-self-start pointer-events-auto"
       >
         <ProgressiveInvert
           className="h-lockup"

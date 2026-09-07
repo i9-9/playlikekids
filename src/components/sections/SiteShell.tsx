@@ -32,12 +32,16 @@ function SiteShellFrame({
 }) {
   const { center } = useFooterSlot();
   const isHome = pathname === "/";
+  const isDirectors = pathname === "/directors" || pathname.startsWith("/directors/");
   const headerTone = isHome ? "light" : "dark";
   const footerTone = isHome ? "light" : "dark";
 
   return (
     <div className="relative flex h-dvh min-h-0 flex-col px-gutter py-chrome">
-      <SiteHeader tone={headerTone} className="relative z-30 shrink-0" />
+      <SiteHeader
+        tone={headerTone}
+        className={`relative z-30 shrink-0 ${isDirectors ? "pb-4" : ""}`}
+      />
       <div className="scrollbar-none z-10 flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
         {children}
       </div>

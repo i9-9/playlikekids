@@ -101,7 +101,7 @@ export function ProgressiveInvert({
   useMotionValueEvent(wipeRect, "change", syncClip);
 
   return (
-    <span ref={ref} className={`relative inline-grid max-w-full ${className}`}>
+    <span ref={ref} className={`relative grid max-w-full ${className}`}>
       <span className="col-start-1 row-start-1">{light}</span>
       {active ? (
         <motion.span

@@ -24,9 +24,10 @@
   --text-director-name: clamp(1.125rem, 1.5vw, 1.375rem);
   /* Footer lockup — logo box height. Directors is sized so Druk cap-height matches it. */
   --footer-lockup: 2.5rem;
-  --footer-height: calc(2.5rem + 1.25rem); /* lockup + pt-5 */
+  --footer-pad-top: 0.625rem;
+  --footer-height: calc(var(--footer-lockup) + var(--footer-pad-top));
   --druk-directors-ink: 0.756;
-  --druk-directors-ink-top: 0.0625;
+  --druk-directors-ink-top: 0.069;
   --text-wordmark-footer: calc(var(--footer-lockup) / var(--druk-directors-ink));
   --text-wordmark-hero: clamp(1.5rem, 7vw, 8.5rem);
 
@@ -57,23 +58,24 @@
     --list-indent: 20%;
     --list-gap: 8rem;
     --footer-lockup: 4rem;
-    --footer-height: calc(4rem + 1rem); /* lockup + md:pt-4 */
+    --footer-pad-top: 1rem;
+    --footer-height: calc(var(--footer-lockup) + var(--footer-pad-top));
   }
 }
 
 @media (min-width: 1024px) {
   :root {
     --footer-lockup: 5rem;
-    --footer-height: calc(5rem + 1rem); /* lockup + md:pt-4 */
+    --footer-height: calc(var(--footer-lockup) + var(--footer-pad-top));
   }
 }
 
 /* Profile-only type and vertical rhythm — list X lives on .directors-roster */
 .director-profile-page {
   --text-director-name: clamp(1.5rem, 5.6vw, 1.75rem);
-  --profile-name-top: 1.75rem;
-  --profile-player-top: 2.25rem;
-  --profile-list-gap: 2.75rem;
+  --profile-name-top: 0;
+  --profile-player-top: 3rem;
+  --profile-list-gap: 3rem;
   --credit-row-gap: 0.875rem;
   --credit-name-gap: 1.5rem;
 }
@@ -89,6 +91,7 @@
   --list-names-inset: calc(var(--list-indent) + var(--list-num) + var(--list-gap));
   --roster-end: 0;
   --roster-gap: 0px;
+  --roster-middle-pad: 0px;
   --roster-list-pad: 0px;
   --roster-ease: cubic-bezier(0.76, 0, 0.24, 1);
   display: flex;
@@ -129,6 +132,8 @@
 .directors-roster-middle {
   min-width: 0;
   flex-shrink: 0;
+  margin-block: var(--roster-middle-pad);
+  transition: margin 0.5s var(--roster-ease);
 }
 
 .directors-roster-slot {
@@ -144,6 +149,7 @@
 .directors-roster--index {
   --roster-end: 1;
   --roster-gap: 3rem;
+  --roster-middle-pad: 0px;
   --roster-list-pad: 0px;
   padding-top: 1.5rem;
 }
@@ -151,8 +157,9 @@
 .directors-roster--profile {
   --roster-end: 0;
   --roster-gap: 0px;
-  --roster-list-pad: var(--profile-list-gap);
-  padding-top: 2rem;
+  --roster-middle-pad: 3rem;
+  --roster-list-pad: 0px;
+  padding-top: 1.5rem;
 }
 
 .director-profile-stack {
@@ -197,10 +204,10 @@
     --axis-name-box: calc(var(--axis-num) + var(--list-num) - var(--page-gutter));
     --axis-credits-box: calc(var(--axis-credits) - var(--page-gutter));
     --profile-name-top: 8.906vw;
-    --profile-player-top: 1.25rem;
+    --profile-player-top: 0px;
     --credit-row-gap: 1.3vw;
     --credit-name-gap: var(--credit-row-gap);
-    --profile-list-gap: 3.2vw;
+    --profile-list-gap: 3rem;
   }
 
   .director-profile-stack {
@@ -282,9 +289,26 @@
     display: none;
   }
 
-  /* Pull Druk caps up so their ink sits on the same row as the footer logo. */
+  /*
+    Trim Druk’s em-box to cap→alphabetic ink so the wordmark box matches the
+    logo height. Fallback translate for browsers without text-box-trim (iOS <18.2).
+  */
   .wordmark-lockup {
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
     translate: 0 calc(var(--druk-directors-ink-top) * -1em);
+  }
+
+  @supports (text-box-trim: trim-both) {
+    .wordmark-lockup {
+      translate: none;
+    }
+  }
+
+  @supports not (text-box-trim: trim-both) {
+    .link-wordmark {
+      overflow: hidden;
+    }
   }
 }
 
