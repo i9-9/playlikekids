@@ -4,7 +4,11 @@ import {
 } from "@/lib/vimeo/thumbnail";
 import type { Credit, Director, HeroImage } from "@/lib/sanity/types";
 import type { DirectorCardData } from "@/components/sections/DirectorCard";
-import { SITE_LOGO_PATH } from "@/lib/site";
+import {
+  SITE_LOGO_HEIGHT,
+  SITE_LOGO_PATH,
+  SITE_LOGO_WIDTH,
+} from "@/lib/site";
 
 export type ResolvedFilm = Credit & {
   videoId: string | null;
@@ -142,8 +146,8 @@ export async function resolveDirectorOgImage(
 
   return {
     url: fallback,
-    width: isLogo ? 1585 : OG_THUMB_WIDTH,
-    height: isLogo ? 776 : OG_THUMB_HEIGHT,
+    width: isLogo ? SITE_LOGO_WIDTH : OG_THUMB_WIDTH,
+    height: isLogo ? SITE_LOGO_HEIGHT : OG_THUMB_HEIGHT,
     alt: director.name,
   };
 }

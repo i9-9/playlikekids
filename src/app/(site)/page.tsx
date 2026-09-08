@@ -9,7 +9,13 @@ import {
   isUnderConstruction,
   shouldGatePublicSite,
 } from "@/lib/site-mode";
-import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
+import {
+  SITE_DESCRIPTION,
+  SITE_LOGO_HEIGHT,
+  SITE_LOGO_PATH,
+  SITE_LOGO_WIDTH,
+  SITE_NAME,
+} from "@/lib/site";
 
 export const metadata: Metadata = {
   title: {
@@ -26,9 +32,9 @@ export const metadata: Metadata = {
     url: "/",
     images: [
       {
-        url: "/ASSETS/LOGO_PNG/logo-tierra.png",
-        width: 1585,
-        height: 776,
+        url: SITE_LOGO_PATH,
+        width: SITE_LOGO_WIDTH,
+        height: SITE_LOGO_HEIGHT,
         alt: SITE_NAME,
       },
     ],
@@ -37,7 +43,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    images: ["/ASSETS/LOGO_PNG/logo-tierra.png"],
+    images: [SITE_LOGO_PATH],
   },
 };
 

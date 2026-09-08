@@ -8,4 +8,7 @@ export const SITE_DESCRIPTION =
 
 export const SITE_EMAIL = "hello@playlikekids.tv";
 
-export const SITE_LOGO_PATH = "/ASSETS/LOGO_PNG/logo-tierra.png";
+/** Public logo used for Open Graph, Twitter, and Organization JSON-LD. */
+export const SITE_LOGO_PATH = "/logo/SVG/logo%20plk.svg";
+export const SITE_LOGO_WIDTH = 251;
+export const SITE_LOGO_HEIGHT = 130;

@@ -155,7 +155,7 @@
 }
 
 .directors-roster--profile {
-  --roster-end: 0;
+  --roster-end: 1;
   --roster-gap: 0px;
   --roster-middle-pad: 3rem;
   --roster-list-pad: 0px;

@@ -4,7 +4,12 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { toDirectorCards } from "@/lib/directors/resolve-media";
 import { directorsIndexJsonLd } from "@/lib/json-ld";
 import { getAllDirectors } from "@/lib/sanity/queries";
-import { SITE_NAME } from "@/lib/site";
+import {
+  SITE_LOGO_HEIGHT,
+  SITE_LOGO_PATH,
+  SITE_LOGO_WIDTH,
+  SITE_NAME,
+} from "@/lib/site";
 
 const DIRECTORS_DESCRIPTION =
   "Meet the directors of Play Like Kids — a creative production company in Mexico City producing film, advertising, and branded content.";
@@ -22,9 +27,9 @@ export const metadata: Metadata = {
     url: "/directors",
     images: [
       {
-        url: "/ASSETS/LOGO_PNG/logo-tierra.png",
-        width: 1585,
-        height: 776,
+        url: SITE_LOGO_PATH,
+        width: SITE_LOGO_WIDTH,
+        height: SITE_LOGO_HEIGHT,
         alt: SITE_NAME,
       },
     ],
@@ -33,7 +38,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `Directors — ${SITE_NAME}`,
     description: DIRECTORS_DESCRIPTION,
-    images: ["/ASSETS/LOGO_PNG/logo-tierra.png"],
+    images: [SITE_LOGO_PATH],
   },
 };
 

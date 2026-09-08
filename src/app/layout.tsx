@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import { druk, roboto } from "./fonts";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import {
+  SITE_DESCRIPTION,
+  SITE_LOGO_HEIGHT,
+  SITE_LOGO_PATH,
+  SITE_LOGO_WIDTH,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/site";
 import { isUnderConstruction } from "@/lib/site-mode";
 import { siteGraphJsonLd } from "@/lib/json-ld";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -30,9 +37,9 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: [
       {
-        url: "/ASSETS/LOGO_PNG/logo-tierra.png",
-        width: 1585,
-        height: 776,
+        url: SITE_LOGO_PATH,
+        width: SITE_LOGO_WIDTH,
+        height: SITE_LOGO_HEIGHT,
         alt: SITE_NAME,
       },
     ],
@@ -41,7 +48,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    images: ["/ASSETS/LOGO_PNG/logo-tierra.png"],
+    images: [SITE_LOGO_PATH],
   },
   robots: isUnderConstruction()
     ? { index: false, follow: false }
