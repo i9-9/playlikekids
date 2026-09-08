@@ -12,6 +12,7 @@ import {
 import {
   CLOSE_DIRECTOR_PLAYER_EVENT,
   DirectorPlayerChromeProvider,
+  cycleDirectorFilm,
 } from "@/components/sections/director-profile-events";
 import {
   NumberedList,
@@ -33,6 +34,8 @@ const SLOT_TRANSITION = {
 /** Same timing as the thumbnail → player morph in DirectorProfile. */
 const LIST_LAYOUT_EASE = [0.22, 0.61, 0.36, 1] as const;
 const LIST_LAYOUT = { duration: 0.64, ease: LIST_LAYOUT_EASE } as const;
+const FILM_NAV_BTN =
+  "font-roboto text-body font-black tracking-wide transition-opacity duration-200 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-70 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-[3px] motion-reduce:duration-0";
 
 function CollapseGhost({
   html,
@@ -223,11 +226,6 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
     [],
   );
 
-  const activeDirector = items.find((item) => item.href === listHref);
-  const closePlayer = () => {
-    window.dispatchEvent(new Event(CLOSE_DIRECTOR_PLAYER_EVENT));
-  };
-
   return (
     <DirectorPlayerChromeProvider value={chrome}>
       <LayoutGroup id="directors-roster">
@@ -249,18 +247,27 @@ export function DirectorsRoster({ items, children }: DirectorsRosterProps) {
           href={showAsProfile ? "/directors" : undefined}
         />
         {playerOpen ? (
-          <button
-            type="button"
-            onClick={closePlayer}
-            className="shrink-0 text-right font-roboto text-body font-black uppercase tracking-wide transition-opacity duration-200 ease-[cubic-bezier(0.76,0,0.24,1)] hover:opacity-70 motion-reduce:duration-0"
-            aria-label={
-              activeDirector
-                ? `Back to ${activeDirector.label} films`
-                : "Back to director films"
-            }
+          <nav
+            className="flex shrink-0 items-baseline gap-3"
+            aria-label="Films"
           >
-            BACK
-          </button>
+            <button
+              type="button"
+              onClick={() => cycleDirectorFilm(-1)}
+              className={FILM_NAV_BTN}
+              aria-label="Previous film"
+            >
+              {"[ < ]"}
+            </button>
+            <button
+              type="button"
+              onClick={() => cycleDirectorFilm(1)}
+              className={FILM_NAV_BTN}
+              aria-label="Next film"
+            >
+              {"[ > ]"}
+            </button>
+          </nav>
         ) : null}
       </div>
 

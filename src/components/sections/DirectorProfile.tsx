@@ -14,7 +14,9 @@ import { formatCreditLabel } from "@/lib/credits";
 import type { ResolvedFilm } from "@/lib/directors/resolve-media";
 import {
   CLOSE_DIRECTOR_PLAYER_EVENT,
+  CYCLE_DIRECTOR_FILM_EVENT,
   useDirectorPlayerChrome,
+  type CycleDirectorFilmDirection,
 } from "@/components/sections/director-profile-events";
 
 export type DirectorProfileData = {
@@ -35,6 +37,25 @@ const MORPH_FALLBACK_MS = 700;
 
 const TILE_LABEL_CLASS =
   "min-w-0 font-roboto text-credit font-medium uppercase leading-snug tracking-[0.2em]";
+
+function canPlayFilm(film: ResolvedFilm | undefined) {
+  return Boolean(film?.videoId && film.thumbnailUrl);
+}
+
+function nextPlayableIndex(
+  films: ResolvedFilm[],
+  from: number,
+  direction: CycleDirectorFilmDirection,
+) {
+  const total = films.length;
+  if (total === 0) return from;
+  let index = from;
+  for (let step = 0; step < total; step += 1) {
+    index = (index + direction + total) % total;
+    if (canPlayFilm(films[index])) return index;
+  }
+  return from;
+}
 
 function filmOverlay(film: ResolvedFilm) {
   return /sundance/i.test(film.festival?.name ?? "") ? (
@@ -143,6 +164,7 @@ export function DirectorProfile({ director }: DirectorProfileProps) {
   const inPlayer = playing || closing;
 
   const ignorePlayerLayout = useRef(false);
+  const openedFromGridIndex = useRef(0);
 
   const filmLayoutId = (index: number) =>
     `director-film-${director.slug}-${index}`;
@@ -159,17 +181,32 @@ export function DirectorProfile({ director }: DirectorProfileProps) {
     finishMorph();
   };
 
-  const selectFilm = (index: number) => {
-    prefetchVideoPlayer();
-    const fromGrid = !playing;
-    ignorePlayerLayout.current = false;
-    setClosing(false);
-    setActiveIndex(index);
-    setPlaying(true);
-    chrome?.setPlayerOpen(true);
-    setPlayerReady(instant || !fromGrid);
-    if (!instant && fromGrid) setGridOpen(false);
-  };
+  const selectFilm = useCallback(
+    (index: number) => {
+      if (!canPlayFilm(films[index])) return;
+      prefetchVideoPlayer();
+      const fromGrid = !playing;
+      if (fromGrid) openedFromGridIndex.current = index;
+      ignorePlayerLayout.current = false;
+      setClosing(false);
+      setActiveIndex(index);
+      setPlaying(true);
+      chrome?.setPlayerOpen(true);
+      setPlayerReady(instant || !fromGrid);
+      if (!instant && fromGrid) setGridOpen(false);
+    },
+    [films, playing, instant, chrome],
+  );
+
+  const cycleFilm = useCallback(
+    (direction: CycleDirectorFilmDirection) => {
+      if (!playing) return;
+      const next = nextPlayableIndex(films, activeIndex, direction);
+      if (next === activeIndex) return;
+      selectFilm(next);
+    },
+    [playing, films, activeIndex, selectFilm],
+  );
 
   const closePlayer = useCallback(() => {
     if (!playing) return;
@@ -198,6 +235,42 @@ export function DirectorProfile({ director }: DirectorProfileProps) {
       window.removeEventListener(CLOSE_DIRECTOR_PLAYER_EVENT, closePlayer);
     };
   }, [closePlayer]);
+
+  useEffect(() => {
+    const onCycle = (event: Event) => {
+      const direction = (event as CustomEvent<{ direction?: unknown }>).detail
+        ?.direction;
+      if (direction !== 1 && direction !== -1) return;
+      cycleFilm(direction);
+    };
+    window.addEventListener(CYCLE_DIRECTOR_FILM_EVENT, onCycle);
+    return () => {
+      window.removeEventListener(CYCLE_DIRECTOR_FILM_EVENT, onCycle);
+    };
+  }, [cycleFilm]);
+
+  useEffect(() => {
+    if (!playing) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target;
+      if (target instanceof HTMLElement) {
+        const tag = target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || tag === "IFRAME") return;
+        if (target.isContentEditable) return;
+        if (target.closest("iframe")) return;
+      }
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        cycleFilm(-1);
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        cycleFilm(1);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [playing, cycleFilm]);
 
   useEffect(() => {
     if (!playing || playerReady) return;
@@ -307,9 +380,9 @@ export function DirectorProfile({ director }: DirectorProfileProps) {
               ? filmLayoutId(index)
               : undefined;
             const showPlayer =
-              inPlayer &&
-              selected &&
-              Boolean(film.videoId && film.thumbnailUrl);
+              inPlayer && selected && canPlayFilm(film);
+            const skipSharedLayout =
+              playing && !closing && index !== openedFromGridIndex.current;
 
             return (
               <motion.li
@@ -334,9 +407,9 @@ export function DirectorProfile({ director }: DirectorProfileProps) {
                     overlay={filmOverlay(film)}
                     sizes="(max-width: 768px) 100vw, 70vw"
                     className="relative w-full overflow-hidden bg-foreground/5 aspect-video"
-                    layout
+                    layout={!skipSharedLayout}
                     retiring={closing}
-                    layoutId={layoutId}
+                    layoutId={skipSharedLayout ? undefined : layoutId}
                     layoutTransition={layoutTransition}
                     onLayoutAnimationComplete={onPlayerLayoutComplete}
                   />
