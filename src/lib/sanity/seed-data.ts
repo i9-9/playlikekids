@@ -217,6 +217,9 @@ export const SEED_DIRECTORS: Omit<Director, "_id">[] = [
 /**
  * Home hero frames — film stills shown full-bleed on `/`.
  * Real photography only — never use layout mockups here.
+ * Export without letterbox/pillarbox bars: on wide viewports
+ * `object-cover` keeps left/right edges visible, so black frame
+ * borders read as thin side lines on the home.
  */
 export const LOCAL_HERO_IMAGES: Hero["images"] = [
   {
