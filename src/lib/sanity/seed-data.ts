@@ -62,8 +62,8 @@ export const SEED_DIRECTORS: Omit<Director, "_id">[] = [
       {
         brand: "Marga en el DF",
         project: "Trailer",
-        vimeoId: "1217463372",
-        vimeoHash: "26268705de",
+        vimeoId: "1164762885",
+        vimeoHash: null,
         festival: {
           name: "Sundance Film Festival",
           year: "2026",
