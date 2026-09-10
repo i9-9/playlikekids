@@ -13,8 +13,8 @@ type HomeHeroProps = {
 
 /** Hard cut dwell — no crossfade overlap. */
 const DEFAULT_INTERVAL_MS = 2200;
-/** Full-bleed stills; default next/image q=75 looks soft at 100vw. */
-const HERO_IMAGE_QUALITY = 90;
+/** Full-bleed stills; keep near-lossless — soft compression reads cheap at 100vw. */
+const HERO_IMAGE_QUALITY = 100;
 
 /**
  * Full-bleed hero that auto-cycles film stills with a hard cut.

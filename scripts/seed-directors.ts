@@ -56,8 +56,12 @@ async function main() {
     console.log(`Upserted director: ${director.name}`);
   }
 
+  const localHeroFrames = LOCAL_HERO_IMAGES.filter((frame) =>
+    frame.url.startsWith("/"),
+  );
+
   const heroImages = await Promise.all(
-    LOCAL_HERO_IMAGES.map(async (frame, index) => {
+    localHeroFrames.map(async (frame, index) => {
       const filePath = path.join(
         process.cwd(),
         "public",
