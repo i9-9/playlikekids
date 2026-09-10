@@ -1,43 +1,23 @@
 "use client";
 
 import Image from "next/image";
-import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { HeroImage } from "@/lib/sanity/types";
 
 type HomeHeroProps = {
   images: HeroImage[];
-  /** Milliseconds each frame stays fully visible before the next transition. */
+  /** Milliseconds each frame stays visible before the next cut. */
   intervalMs?: number;
   className?: string;
 };
 
-export type HeroTransition = "fade" | "cut" | "wipe";
-
-const FADE_DURATION_S = 1.1;
-const INTRO_DURATION_S = 0.8;
-const WIPE_DURATION_S = 0.85;
-/** Hard cut has no overlap, so dwell shorter than fade/wipe. */
-const CUT_INTERVAL_MS = 2200;
-const DEFAULT_INTERVAL_MS = 4200;
+/** Hard cut dwell — no crossfade overlap. */
+const DEFAULT_INTERVAL_MS = 2200;
 /** Full-bleed stills; default next/image q=75 looks soft at 100vw. */
 const HERO_IMAGE_QUALITY = 90;
-const STORAGE_KEY = "plk-home-slide-transition";
-const EASE_SITE = [0.76, 0, 0.24, 1] as const;
-
-const TRANSITION_OPTIONS: { id: HeroTransition; label: string }[] = [
-  { id: "fade", label: "Fundido" },
-  { id: "cut", label: "Corte" },
-  { id: "wipe", label: "Wipe" },
-];
-
-function isHeroTransition(value: string | null): value is HeroTransition {
-  return value === "fade" || value === "cut" || value === "wipe";
-}
 
 /**
- * Full-bleed hero that auto-cycles director film posters.
- * Transition is client-selectable (preview) until one is locked in.
+ * Full-bleed hero that auto-cycles film stills with a hard cut.
  */
 export function HomeHero({
   images,
@@ -46,20 +26,6 @@ export function HomeHero({
 }: HomeHeroProps) {
   const frames = images;
   const [index, setIndex] = useState(0);
-  const [intro, setIntro] = useState(true);
-  const [transition, setTransition] = useState<HeroTransition>("fade");
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (isHeroTransition(stored)) setTransition(stored);
-  }, []);
-
-  useEffect(() => {
-    const id = window.setTimeout(() => setIntro(false), INTRO_DURATION_S * 1000);
-    return () => window.clearTimeout(id);
-  }, []);
-
-  const cycleMs = transition === "cut" ? CUT_INTERVAL_MS : intervalMs;
 
   useEffect(() => {
     if (frames.length < 2) return;
@@ -70,7 +36,7 @@ export function HomeHero({
       if (intervalId !== undefined) return;
       intervalId = window.setInterval(() => {
         setIndex((current) => (current + 1) % frames.length);
-      }, cycleMs);
+      }, intervalMs);
     };
 
     const stop = () => {
@@ -91,12 +57,7 @@ export function HomeHero({
       stop();
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [frames.length, cycleMs]);
-
-  const chooseTransition = useCallback((next: HeroTransition) => {
-    setTransition(next);
-    window.localStorage.setItem(STORAGE_KEY, next);
-  }, []);
+  }, [frames.length, intervalMs]);
 
   if (frames.length === 0) {
     return (
@@ -107,172 +68,28 @@ export function HomeHero({
     );
   }
 
-  const frame = frames[index];
-  const slide = (
-    <Image
-      src={frame.url}
-      alt={frame.alt}
-      fill
-      priority={index === 0}
-      sizes="100vw"
-      quality={HERO_IMAGE_QUALITY}
-      className="object-cover"
-    />
-  );
-
   return (
-    <div
-      className={`absolute inset-0 overflow-hidden ${transition === "wipe" ? "bg-foreground" : ""} ${className}`}
-    >
-      {transition === "cut" ? (
-        frames.map((cutFrame, cutIndex) => (
-          <div
-            key={cutFrame.url}
-            className="absolute inset-0"
-            style={{
-              visibility: cutIndex === index ? "visible" : "hidden",
-            }}
-            aria-hidden={cutIndex !== index}
-          >
-            <Image
-              src={cutFrame.url}
-              alt={cutFrame.alt}
-              fill
-              priority={cutIndex === 0}
-              sizes="100vw"
-              quality={HERO_IMAGE_QUALITY}
-              className="object-cover"
-            />
-          </div>
-        ))
-      ) : transition === "wipe" ? (
-        <WipeTrack frames={frames} index={index} />
-      ) : (
-        <AnimatePresence mode="sync" initial={false}>
-          <motion.div
-            key={frame.url}
-            className="absolute inset-0"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{
-              duration: intro ? INTRO_DURATION_S : FADE_DURATION_S,
-              ease: "easeInOut",
-            }}
-          >
-            {slide}
-          </motion.div>
-        </AnimatePresence>
-      )}
-      <HeroTransitionPicker value={transition} onChange={chooseTransition} />
-    </div>
-  );
-}
-
-function HeroSlide({
-  frame,
-  priority = false,
-}: {
-  frame: HeroImage;
-  priority?: boolean;
-}) {
-  return (
-    <Image
-      src={frame.url}
-      alt={frame.alt}
-      fill
-      priority={priority}
-      sizes="100vw"
-      quality={HERO_IMAGE_QUALITY}
-      className="object-cover max-w-none"
-    />
-  );
-}
-
-/** Incoming and outgoing frames travel left together (push wipe). */
-function WipeTrack({
-  frames,
-  index,
-}: {
-  frames: HeroImage[];
-  index: number;
-}) {
-  const previousIndex = useRef(index);
-  const [pair, setPair] = useState({
-    from: index,
-    to: index,
-    sliding: false,
-  });
-
-  useEffect(() => {
-    if (index === previousIndex.current) return;
-    const from = previousIndex.current;
-    previousIndex.current = index;
-    setPair({ from, to: index, sliding: true });
-  }, [index]);
-
-  const current = frames[pair.sliding ? pair.from : pair.to];
-  const incoming = frames[pair.to];
-
-  if (!current) return null;
-
-  return (
-    <motion.div
-      key={pair.sliding ? `${pair.from}-${pair.to}` : `still-${pair.to}`}
-      className="absolute inset-0 flex h-full bg-foreground [backface-visibility:hidden]"
-      initial={{ x: 0 }}
-      animate={{ x: pair.sliding ? "-100%" : 0 }}
-      transition={{
-        duration: pair.sliding ? WIPE_DURATION_S : 0,
-        ease: EASE_SITE,
-      }}
-      onAnimationComplete={() => {
-        if (!pair.sliding) return;
-        setPair({ from: pair.to, to: pair.to, sliding: false });
-      }}
-    >
-      <div className="relative h-full w-full shrink-0 overflow-hidden bg-foreground">
-        <HeroSlide frame={current} priority={pair.to === 0} />
-      </div>
-      {pair.sliding && incoming ? (
-        <div className="relative h-full w-full shrink-0 overflow-hidden bg-foreground">
-          <HeroSlide frame={incoming} />
+    <div className={`absolute inset-0 overflow-hidden ${className}`}>
+      {frames.map((frame, frameIndex) => (
+        <div
+          key={frame.url}
+          className="absolute inset-0"
+          style={{
+            visibility: frameIndex === index ? "visible" : "hidden",
+          }}
+          aria-hidden={frameIndex !== index}
+        >
+          <Image
+            src={frame.url}
+            alt={frame.alt}
+            fill
+            priority={frameIndex === 0}
+            sizes="100vw"
+            quality={HERO_IMAGE_QUALITY}
+            className="object-cover"
+          />
         </div>
-      ) : null}
-    </motion.div>
-  );
-}
-
-function HeroTransitionPicker({
-  value,
-  onChange,
-}: {
-  value: HeroTransition;
-  onChange: (next: HeroTransition) => void;
-}) {
-  return (
-    <div
-      role="radiogroup"
-      aria-label="Transición de las imágenes del home"
-      className="pointer-events-auto fixed right-6 top-1/2 z-40 flex -translate-y-1/2 flex-col gap-1.5 font-roboto text-[0.625rem] font-medium uppercase leading-none tracking-wider text-white"
-    >
-      {TRANSITION_OPTIONS.map((option) => {
-        const selected = option.id === value;
-        return (
-          <button
-            key={option.id}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            onClick={() => onChange(option.id)}
-            className={`cursor-pointer transition-all duration-200 ease-[cubic-bezier(0.76,0,0.24,1)] ${
-              selected ? "font-bold opacity-100 scale-110" : "opacity-40 hover:opacity-70"
-            }`}
-          >
-            {option.label}
-          </button>
-        );
-      })}
+      ))}
     </div>
   );
 }

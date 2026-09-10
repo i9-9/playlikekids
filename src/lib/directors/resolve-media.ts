@@ -2,7 +2,7 @@ import {
   extractVimeoId,
   getVimeoThumbnail,
 } from "@/lib/vimeo/thumbnail";
-import type { Credit, Director, HeroImage } from "@/lib/sanity/types";
+import type { Credit, Director } from "@/lib/sanity/types";
 import type { DirectorCardData } from "@/components/sections/DirectorCard";
 import {
   SITE_LOGO_HEIGHT,
@@ -80,37 +80,6 @@ export async function resolveDirectorFilms(
   director: Director,
 ): Promise<ResolvedFilm[]> {
   return Promise.all(director.credits.map((credit) => resolveFilm(credit)));
-}
-
-const HERO_THUMB_WIDTH = 1920;
-
-/** Home hero: Vimeo poster per director, in roster order. */
-export async function resolveHomeHeroImages(
-  directors: Director[],
-): Promise<HeroImage[]> {
-  const frames = await Promise.all(
-    directors.map(async (director) => {
-      const credit = featuredStillCredit(director);
-      const videoId = credit?.vimeoId ? extractVimeoId(credit.vimeoId) : null;
-      if (!videoId || !credit) return null;
-
-      const thumb = await getVimeoThumbnail(videoId, credit.vimeoHash, {
-        width: HERO_THUMB_WIDTH,
-      });
-      if (!thumb?.thumbnailUrl) return null;
-
-      const title = [credit.brand, credit.project]
-        .filter(Boolean)
-        .join(" — ");
-
-      return {
-        url: withVimeoThumbWidth(thumb.thumbnailUrl, HERO_THUMB_WIDTH),
-        alt: title ? `${director.name} — ${title}` : director.name,
-      };
-    }),
-  );
-
-  return frames.filter((frame): frame is HeroImage => Boolean(frame));
 }
 
 const OG_THUMB_WIDTH = 1280;

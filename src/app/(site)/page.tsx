@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { HomeHero } from "@/components/sections/HomeHero";
 import { UnderConstruction } from "@/components/sections/UnderConstruction";
-import { resolveHomeHeroImages } from "@/lib/directors/resolve-media";
-import { getAllDirectors } from "@/lib/sanity/queries";
+import { LOCAL_HERO_IMAGES } from "@/lib/sanity/seed-data";
 import {
   SITE_PREVIEW_COOKIE,
   isUnderConstruction,
@@ -55,13 +54,10 @@ export default async function HomePage() {
     return <UnderConstruction />;
   }
 
-  const directors = await getAllDirectors();
-  const images = await resolveHomeHeroImages(directors);
-
   return (
     <>
       <h1 className="sr-only">{SITE_NAME}</h1>
-      <HomeHero images={images} />
+      <HomeHero images={LOCAL_HERO_IMAGES} />
     </>
   );
 }

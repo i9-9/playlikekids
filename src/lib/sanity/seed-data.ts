@@ -215,21 +215,25 @@ export const SEED_DIRECTORS: Omit<Director, "_id">[] = [
 ];
 
 /**
- * Local hero frames for development / until Sanity has a published hero doc.
+ * Home hero frames — film stills shown full-bleed on `/`.
  * Real photography only — never use layout mockups here.
  */
 export const LOCAL_HERO_IMAGES: Hero["images"] = [
   {
     url: "/hero/childhomesick1.png",
-    alt: "Play Like Kids — hero frame 1",
+    alt: "Portrait seen through rippled glass against a teal backdrop",
   },
   {
     url: "/hero/childhomesick2.png",
-    alt: "Play Like Kids — hero frame 2",
+    alt: "Woman in a gold dress reflected in a vanity mirror",
   },
   {
     url: "/hero/childhomesick3.png",
-    alt: "Play Like Kids — hero frame 3",
+    alt: "Person in a cream dress climbing through a window into a lavender room",
+  },
+  {
+    url: "/hero/placebo1.jpg",
+    alt: "Couple in an intimate embrace at night with teal and orange light",
   },
 ];
 
