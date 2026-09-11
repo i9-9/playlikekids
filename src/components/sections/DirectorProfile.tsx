@@ -57,6 +57,14 @@ function nextPlayableIndex(
   return from;
 }
 
+/** Next playable film after `from`, without wrapping to earlier titles. */
+function nextPlayableIndexForward(films: ResolvedFilm[], from: number) {
+  for (let index = from + 1; index < films.length; index += 1) {
+    if (canPlayFilm(films[index])) return index;
+  }
+  return null;
+}
+
 function filmOverlay(film: ResolvedFilm) {
   return /sundance/i.test(film.festival?.name ?? "") ? (
     <SundanceLockup />
@@ -207,6 +215,13 @@ export function DirectorProfile({ director }: DirectorProfileProps) {
     },
     [playing, films, activeIndex, selectFilm],
   );
+
+  const advanceToNextFilm = useCallback(() => {
+    if (!playing) return;
+    const next = nextPlayableIndexForward(films, activeIndex);
+    if (next == null) return;
+    selectFilm(next);
+  }, [playing, films, activeIndex, selectFilm]);
 
   const closePlayer = useCallback(() => {
     if (!playing) return;
@@ -412,6 +427,7 @@ export function DirectorProfile({ director }: DirectorProfileProps) {
                     layoutId={skipSharedLayout ? undefined : layoutId}
                     layoutTransition={layoutTransition}
                     onLayoutAnimationComplete={onPlayerLayoutComplete}
+                    onEnded={advanceToNextFilm}
                   />
                 ) : (
                   <FilmTile

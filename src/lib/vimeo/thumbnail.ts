@@ -47,6 +47,7 @@ export function toVimeoEmbedUrl(
   url.searchParams.set("title", "0");
   url.searchParams.set("byline", "0");
   url.searchParams.set("portrait", "0");
+  url.searchParams.set("badge", "0");
   url.searchParams.set("dnt", "1");
   url.searchParams.set("playsinline", "1");
   url.searchParams.set("keyboard", "0");

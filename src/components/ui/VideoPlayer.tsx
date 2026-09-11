@@ -64,6 +64,8 @@ export type VideoPlayerProps = {
   retiring?: boolean;
   layoutTransition?: Transition;
   onLayoutAnimationComplete?: () => void;
+  /** Fired when playback reaches the end (before any end-screen UI). */
+  onEnded?: () => void;
 };
 
 export function VideoPlayer({
@@ -81,6 +83,7 @@ export function VideoPlayer({
   retiring = false,
   layoutTransition,
   onLayoutAnimationComplete,
+  onEnded,
 }: VideoPlayerProps) {
   const reduced = useReducedMotion();
   const fadeDuration = reduced ? 0 : 0.28;
@@ -95,6 +98,8 @@ export function VideoPlayer({
   const idleRef = useRef<number>(0);
   const clickTimerRef = useRef<number>(0);
   const scrubbingRef = useRef(false);
+  const onEndedRef = useRef(onEnded);
+  onEndedRef.current = onEnded;
 
   const [started, setStarted] = useState(autoplay);
   const [posterVisible, setPosterVisible] = useState(true);
@@ -171,10 +176,12 @@ export function VideoPlayer({
       setEnded(false);
     };
     const onPause = () => setPaused(true);
-    const onEnded = () => {
+    const onEndedEvent = () => {
+      // Cover Vimeo's related-videos end screen immediately.
       setEnded(true);
       setPaused(true);
       setChrome(true);
+      onEndedRef.current?.();
     };
     const onTime = (data: { seconds: number; duration: number }) => {
       if (scrubbingRef.current) return;
@@ -192,7 +199,7 @@ export function VideoPlayer({
 
     player.on("play", onPlay);
     player.on("pause", onPause);
-    player.on("ended", onEnded);
+    player.on("ended", onEndedEvent);
     player.on("timeupdate", onTime);
     player.on("progress", onProgress);
     player.on("volumechange", onVolume);
@@ -228,7 +235,7 @@ export function VideoPlayer({
       cancelled = true;
       player.off("play", onPlay);
       player.off("pause", onPause);
-      player.off("ended", onEnded);
+      player.off("ended", onEndedEvent);
       player.off("timeupdate", onTime);
       player.off("progress", onProgress);
       player.off("volumechange", onVolume);
@@ -624,11 +631,16 @@ export function VideoPlayer({
           })}
           title={label}
           className={`pointer-events-none absolute inset-0 h-full w-full border-0 ${
-            retiring ? "opacity-0" : ""
+            retiring || ended ? "opacity-0" : ""
           }`}
           allow="autoplay; fullscreen; picture-in-picture"
           allowFullScreen
         />
+      ) : null}
+
+      {/* Hide Vimeo end-screen (related videos / branding) behind solid black. */}
+      {started && ended && !retiring ? (
+        <div className="pointer-events-none absolute inset-0 z-[1] bg-black" aria-hidden />
       ) : null}
 
       <button
