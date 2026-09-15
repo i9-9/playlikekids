@@ -116,6 +116,8 @@ export function VideoPlayer({
   const [chrome, setChrome] = useState(true);
   const [speedOpen, setSpeedOpen] = useState(false);
   const [hideVolume, setHideVolume] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const playing = started && !paused && !ended;
   const showChrome = Boolean(
@@ -140,6 +142,8 @@ export function VideoPlayer({
     setSpeedOpen(false);
     setPosterVisible(true);
     setChrome(true);
+    setLoading(false);
+    setError(null);
     pipWindowRef.current?.close();
     pipWindowRef.current = null;
     setPip(false);
@@ -147,10 +151,10 @@ export function VideoPlayer({
 
   useEffect(() => {
     setPosterVisible(true);
-    if (!started || retiring) return;
+    if (!started || retiring || loading) return;
     const id = window.setTimeout(() => setPosterVisible(false), posterHoldMs);
     return () => window.clearTimeout(id);
-  }, [started, videoId, posterHoldMs, retiring]);
+  }, [started, videoId, posterHoldMs, retiring, loading]);
 
   useEffect(() => {
     if (!retiring) return;
@@ -166,6 +170,9 @@ export function VideoPlayer({
 
   useLayoutEffect(() => {
     if (!started || !iframeRef.current) return;
+
+    setLoading(true);
+    setError(null);
 
     const player = new Player(iframeRef.current);
     playerRef.current = player;
@@ -196,6 +203,12 @@ export function VideoPlayer({
     const onRate = (data: { playbackRate: number }) => setRate(data.playbackRate);
     const onFsChange = (data: { fullscreen: boolean }) =>
       setFullscreen(data.fullscreen);
+    const onError = () => {
+      if (!cancelled) {
+        setError("Unable to load video. Please try again.");
+        setLoading(false);
+      }
+    };
 
     player.on("play", onPlay);
     player.on("pause", onPause);
@@ -205,6 +218,7 @@ export function VideoPlayer({
     player.on("volumechange", onVolume);
     player.on("playbackratechange", onRate);
     player.on("fullscreenchange", onFsChange);
+    player.on("error", onError);
 
     void player.ready().then(async () => {
       if (cancelled) return;
@@ -212,23 +226,32 @@ export function VideoPlayer({
         await player.setMuted(true);
         if (await player.getPaused()) await player.play();
       } catch {
+        // Autoplay blocked by browser policy - not an error, just stay paused
         if (!cancelled) setPaused(true);
       }
       if (cancelled) return;
-      const [nextDuration, nextPaused, nextMuted, nextVolume, nextRate] =
-        await Promise.all([
-          player.getDuration(),
-          player.getPaused(),
-          player.getMuted(),
-          player.getVolume(),
-          player.getPlaybackRate(),
-        ]);
-      if (cancelled) return;
-      setDuration(nextDuration);
-      setPaused(nextPaused);
-      setMuted(nextMuted);
-      setVolume(nextVolume);
-      setRate(nextRate);
+      try {
+        const [nextDuration, nextPaused, nextMuted, nextVolume, nextRate] =
+          await Promise.all([
+            player.getDuration(),
+            player.getPaused(),
+            player.getMuted(),
+            player.getVolume(),
+            player.getPlaybackRate(),
+          ]);
+        if (cancelled) return;
+        setDuration(nextDuration);
+        setPaused(nextPaused);
+        setMuted(nextMuted);
+        setVolume(nextVolume);
+        setRate(nextRate);
+        setLoading(false);
+      } catch {
+        if (!cancelled) {
+          setError("Unable to load video details.");
+          setLoading(false);
+        }
+      }
     });
 
     return () => {
@@ -241,6 +264,7 @@ export function VideoPlayer({
       player.off("volumechange", onVolume);
       player.off("playbackratechange", onRate);
       player.off("fullscreenchange", onFsChange);
+      player.off("error", onError);
       playerRef.current = null;
       const iframe = iframeRef.current;
       window.setTimeout(() => {
@@ -505,6 +529,7 @@ export function VideoPlayer({
   const volumeLevel = muted ? 0 : volume;
 
   const onScrubPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
+    event.preventDefault(); // Prevent scroll on mobile
     const bar = event.currentTarget;
     bar.setPointerCapture(event.pointerId);
     scrubbingRef.current = true;
@@ -643,6 +668,40 @@ export function VideoPlayer({
         <div className="pointer-events-none absolute inset-0 z-[1] bg-black" aria-hidden />
       ) : null}
 
+      {/* Loading spinner */}
+      {started && loading && !error ? (
+        <div className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center bg-black/50" aria-live="polite" aria-busy="true">
+          <div className="size-12 animate-spin rounded-full border-4 border-white/20 border-t-white" role="status" aria-label="Loading video" />
+        </div>
+      ) : null}
+
+      {/* Error UI */}
+      {started && error ? (
+        <div className="absolute inset-0 z-[3] flex flex-col items-center justify-center gap-4 bg-black px-6 text-center" role="alert" aria-live="assertive">
+          <svg viewBox="0 0 24 24" className="size-12 text-white/60" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v4M12 16h.01" strokeLinecap="round" />
+          </svg>
+          <p className="font-roboto text-sm font-medium text-white/90">{error}</p>
+          <button
+            type="button"
+            onClick={() => {
+              // Force full player reload by unmounting and remounting the iframe
+              setError(null);
+              setStarted(false);
+              setPosterVisible(true);
+              // Remount in next tick to ensure cleanup completes
+              window.requestAnimationFrame(() => {
+                setStarted(true);
+              });
+            }}
+            className="rounded-md bg-white/10 px-4 py-2 font-roboto text-sm font-medium text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+          >
+            Try Again
+          </button>
+        </div>
+      ) : null}
+
       <button
         type="button"
         className="absolute inset-0 z-[1] cursor-inherit"
@@ -650,6 +709,7 @@ export function VideoPlayer({
           !started ? `Play ${label}` : paused ? `Play ${label}` : `Pause ${label}`
         }
         onClick={onStageClick}
+        disabled={Boolean(error)}
       />
 
       {started ? (
@@ -674,8 +734,23 @@ export function VideoPlayer({
           <Time>{formatTime(currentTime)}</Time>
 
           <div
-            className="group/bar relative mx-1 flex h-7 min-w-0 flex-1 cursor-pointer items-center"
+            className="group/bar relative mx-1 flex min-h-11 min-w-0 flex-1 cursor-pointer items-center"
             onPointerDown={onScrubPointer}
+            onKeyDown={(event) => {
+              if (event.key === "ArrowLeft") {
+                event.preventDefault();
+                seekBy(-SEEK_STEP);
+              } else if (event.key === "ArrowRight") {
+                event.preventDefault();
+                seekBy(SEEK_STEP);
+              } else if (event.key === "Home") {
+                event.preventDefault();
+                void seekTo(0);
+              } else if (event.key === "End") {
+                event.preventDefault();
+                void seekTo(duration);
+              }
+            }}
             role="slider"
             aria-label="Seek"
             aria-valuemin={0}
@@ -695,7 +770,7 @@ export function VideoPlayer({
               />
             </div>
             <div
-              className="absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white opacity-0 shadow-sm transition-opacity duration-150 group-hover/bar:opacity-100 group-focus-visible/bar:opacity-100"
+              className="absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white opacity-0 shadow-sm transition-opacity duration-150 group-hover/bar:opacity-100 group-focus-visible/bar:opacity-100"
               style={{ left: `${progress * 100}%` }}
             />
           </div>
@@ -718,7 +793,7 @@ export function VideoPlayer({
               </ControlButton>
               <div className="w-0 overflow-hidden opacity-0 transition-[width,opacity] duration-200 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover/vol:w-[3.25rem] group-hover/vol:opacity-100 group-focus-within/vol:w-[3.25rem] group-focus-within/vol:opacity-100">
                 <div
-                  className="relative ml-1 h-8 w-12 cursor-pointer"
+                  className="relative ml-1 flex h-11 w-12 cursor-pointer items-center"
                   onPointerDown={onVolumePointer}
                   onKeyDown={(event) => {
                     if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
@@ -746,7 +821,7 @@ export function VideoPlayer({
                     />
                   </div>
                   <div
-                    className="absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
+                    className="absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-sm"
                     style={{
                       left: `calc(5px + ${volumeLevel} * (100% - 10px))`,
                     }}
@@ -778,7 +853,7 @@ export function VideoPlayer({
                     role="menuitemradio"
                     aria-checked={value === rate}
                     onClick={() => void changeRate(value)}
-                    className={`px-3 py-1.5 text-left font-roboto text-[11px] tabular-nums tracking-wide text-white transition-opacity ${
+                    className={`min-h-11 px-3 py-1.5 text-left font-roboto text-[11px] tabular-nums tracking-wide text-white transition-opacity focus-visible:outline-none focus-visible:bg-white/10 ${
                       value === rate ? "opacity-100" : "opacity-50 hover:opacity-80"
                     }`}
                   >
@@ -828,7 +903,7 @@ function ControlButton({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className={`flex h-8 shrink-0 items-center justify-center text-white/90 transition-opacity duration-200 hover:text-white ${className}`}
+      className={`flex min-h-11 min-w-11 shrink-0 items-center justify-center text-white/90 transition-opacity duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black ${className}`}
     >
       {children}
     </button>
