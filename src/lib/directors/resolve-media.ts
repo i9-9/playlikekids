@@ -27,6 +27,14 @@ const LOCAL_DIRECTOR_IMAGES: Record<string, string> = {
   "sage-bennett": "/images-directors/bennett.jpg",
 };
 
+/**
+ * Local film thumbnails — override when Vimeo CDN is serving stale/dark thumbnails.
+ * TEMPORARY: Remove once Vimeo CDN propagates (24-48 hours).
+ */
+const LOCAL_FILM_THUMBNAILS: Record<string, string> = {
+  "1219905007": "/gabriela_marga/thumb.jpg", // Marga en el DF - using local until CDN updates
+};
+
 function localDirectorImage(slug: string): string | null {
   return LOCAL_DIRECTOR_IMAGES[slug] ?? null;
 }
@@ -39,6 +47,16 @@ async function resolveFilm(credit: Credit): Promise<ResolvedFilm> {
   const videoId = credit.vimeoId ? extractVimeoId(credit.vimeoId) : null;
   if (!videoId) {
     return { ...credit, videoId: null, thumbnailUrl: null };
+  }
+
+  // Use local override if available (for stale CDN cache)
+  const localThumbnail = LOCAL_FILM_THUMBNAILS[videoId];
+  if (localThumbnail) {
+    return {
+      ...credit,
+      videoId,
+      thumbnailUrl: localThumbnail,
+    };
   }
 
   const thumb = await getVimeoThumbnail(videoId, credit.vimeoHash);
