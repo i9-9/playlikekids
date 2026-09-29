@@ -2,7 +2,7 @@ import Image from "next/image";
 
 /**
  * Pre-launch holding page (state before the new site commit).
- * Shown in production until NEXT_PUBLIC_UNDER_CONSTRUCTION=false.
+ * Shown only when NEXT_PUBLIC_UNDER_CONSTRUCTION=true.
  */
 export function UnderConstruction() {
   return (
